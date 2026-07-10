@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>企业智能协同平台 · 模型与技能管理</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --deep-purple: #1e1b4b;
+    --indigo: #6366f1;
+    --cyan: #06b6d4;
+    --card-bg: #ffffff;
+    --card-title: #1e1b4b;
+    --card-desc: #64748b;
+    --btn-primary: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+    --btn-secondary: #ffffff;
+    --btn-secondary-border: #e2e8f0;
+    --shadow-hover: 0 20px 40px -12px rgba(99, 102, 241, 0.25);
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f5f7ff;
+    color: #1e293b;
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .top-nav {
+    background: linear-gradient(135deg, #1e1b4b 0%, #6366f1 55%, #06b6d4 100%);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    box-shadow: 0 4px 12px rgba(30, 27, 75, 0.2);
+  }
+  .nav-left { display: flex; align-items: center; gap: 32px; }
+  .logo {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .nav-tab:hover {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+  }
+  .nav-tab.active {
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+    box-shadow: inset 0 -2px 0 #fff;
+  }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .nav-user {
+    color: rgba(255,255,255,0.9);
+    font-size: 13px;
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(6px);
+  }
+  .token-input {
+    width: 180px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font-size: 12px;
+    outline: none;
+  }
+  .token-input::placeholder { color: rgba(255,255,255,0.5); }
+  .btn-nav {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.35);
+    color: #fff;
+    background: rgba(255,255,255,0.12);
+    transition: all 0.2s;
+  }
+  .btn-nav:hover {
+    background: rgba(255,255,255,0.22);
+    transform: translateY(-1px);
+  }
+  .page-wrap { max-width: 1280px; margin: 0 auto; padding: 28px 24px 48px; }
+  .page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--deep-purple);
+    margin-bottom: 4px;
+  }
+  .page-subtitle {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    margin-bottom: 24px;
+    border: 1px solid rgba(226, 232, 240, 0.5);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .card-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--card-title);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+  }
+  .stat-item {
+    padding: 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+    border: 1px solid #e0e7ff;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-item::after {
+    content: "";
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--btn-primary);
+    opacity: 0.08;
+  }
+  .stat-label {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    background: var(--btn-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    position: relative;
+    z-index: 1;
+    word-break: break-all;
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+  }
+  .form-group label .hint {
+    font-weight: 400;
+    color: #94a3b8;
+    font-size: 11px;
+  }
+  .form-control {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .form-control:focus {
+    border-color: var(--indigo);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+  }
+  textarea.form-control { resize: vertical; min-height: 70px; font-family: "Consolas", monospace; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-primary {
+    background: var(--btn-primary);
+    color: #fff;
+  }
+  .btn-primary:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(99,102,241,0.35); }
+  .btn-secondary {
+    background: #fff;
+    color: #6366f1;
+    border: 1px solid #e2e8f0;
+  }
+  .btn-secondary:hover { border-color: #6366f1; background: #eef2ff; }
+  .btn-danger {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+  .btn-danger:hover { background: #fecaca; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    text-align: left;
+    padding: 10px 12px;
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 12px;
+  }
+  tbody td {
+    padding: 11px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    vertical-align: middle;
+  }
+  tbody tr:hover { background: #fafbff; }
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-active { background: #dcfce7; color: #16a34a; }
+  .badge-inactive { background: #f1f5f9; color: #64748b; }
+  .badge-builtin { background: linear-gradient(135deg, #e0e7ff, #cffafe); color: #4f46e5; }
+  .badge-custom { background: #fef3c7; color: #d97706; }
+  .badge-enabled { background: #dcfce7; color: #16a34a; }
+  .badge-disabled { background: #f1f5f9; color: #64748b; }
+  .op-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 18px;
+  }
+  .tab {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: var(--indigo); }
+  .tab.active {
+    color: var(--indigo);
+    border-bottom-color: var(--indigo);
+    font-weight: 600;
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 640px;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: 0 30px 60px -15px rgba(0,0,0,0.3);
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h3 { font-size: 17px; font-weight: 700; color: var(--deep-purple); }
+  .modal-body { padding: 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; }
+  .modal-close {
+    background: none; border: none; font-size: 22px; cursor: pointer; color: #94a3b8;
+    width: 32px; height: 32px; border-radius: 8px;
+  }
+  .modal-close:hover { background: #f1f5f9; color: #475569; }
+  .json-preview {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: "Consolas", monospace;
+    max-height: 240px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin-top: 10px;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 16px; height: 16px; cursor: pointer;
+    accent-color: var(--indigo);
+  }
+  .toast {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 13px;
+    z-index: 2000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    animation: slideIn 0.25s ease;
+  }
+  .toast-success { background: linear-gradient(135deg, #10b981, #059669); }
+  .toast-error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .toast-info { background: linear-gradient(135deg, #6366f1, #06b6d4); }
+  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @media (max-width: 960px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .top-nav { padding: 0 16px; flex-wrap: wrap; height: auto; }
+    .nav-tabs { flex-wrap: wrap; }
+  }
+.modal-mask{position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:none;align-items:center;justify-content:center;}
+.modal-mask.show{display:flex;}
+.modal{background:#fff;border-radius:14px;width:380px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.25);overflow:hidden;}
+.modal h3{padding:18px 22px 10px;font-size:17px;color:#1e1b4b;background:linear-gradient(90deg,rgba(99,102,241,0.1),rgba(6,182,212,0.08));margin:0;border-bottom:1px solid #eef2ff;}
+.modal .mbody{padding:20px 22px 12px;display:flex;flex-direction:column;gap:12px;}
+.modal label{font-size:12px;color:#475569;font-weight:600;}
+.modal input{padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;outline:none;}
+.modal input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.15);}
+.modal .mfoot{padding:12px 22px 20px;display:flex;gap:10px;justify-content:flex-end;}
+.modal button{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px;}
+.modal .btn-cancel{background:#f1f5f9;color:#475569;}
+.modal .btn-ok{background:linear-gradient(90deg,#6366f1,#06b6d4);color:#fff;}
+.modal .tip{font-size:12px;color:#94a3b8;line-height:1.5;padding:2px 2px;}
+.auth .login-btn{background:rgba(255,255,255,0.22);border:none;padding:5px 14px;border-radius:6px;color:#fff;cursor:pointer;font-size:13px;}
+.auth .login-btn:hover{background:rgba(255,255,255,0.32);}
+.nav-right .login-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.35);padding:6px 14px;border-radius:6px;color:#fff;cursor:pointer;font-size:12px;font-weight:500;transition:all 0.2s;}
+.nav-right .login-btn:hover{background:rgba(255,255,255,0.22);transform:translateY(-1px);}
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <div class="nav-left">
+    <div class="logo">☖ 智能协同平台</div>
+    <div class="nav-tabs">
+      <a class="nav-tab" data-tab="portal" href="/static/portal.html">工作台</a>
+      <a class="nav-tab" data-tab="pipelines" href="/docs#tag/数据采集流水线">采集</a>
+      <a class="nav-tab" data-tab="assets" href="/docs#tag/数据资产分析">资产</a>
+      <a class="nav-tab" data-tab="chat" href="/static/index.html">问数</a>
+      <a class="nav-tab" data-tab="im" href="/static/im.html">通讯</a>
+      <a class="nav-tab" data-tab="employees" href="/static/employees.html">员工</a>
+      <a class="nav-tab" data-tab="modelskills" href="/static/modelskills.html">模型</a>
+    </div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-user" id="navUser">未登录</span>
+    <input type="text" class="token-input" id="tokenInput" placeholder="粘贴 Token..." />
+    <button class="login-btn" onclick="showLogin()">登录</button>
+    <button class="btn-nav" onclick="saveToken()">保存</button>
+    <button class="btn-nav" onclick="clearToken()">退出</button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <h1 class="page-title">🧩 模型与技能管理</h1>
+  <p class="page-subtitle">模型多租户注册、技能管理与测试、员工技能绑定</p>
+
+  <div class="card" id="card-stats">
+    <div class="card-header"><div class="card-title">📊 模型概览</div></div>
+    <div class="stats-grid">
+      <div class="stat-item"><div class="stat-label">模型总数</div><div class="stat-value" id="statModelTotal">0</div></div>
+      <div class="stat-item"><div class="stat-label">默认模型</div><div class="stat-value" id="statDefaultModel" style="font-size:16px;">-</div></div>
+      <div class="stat-item"><div class="stat-label">启用技能总数</div><div class="stat-value" id="statSkillTotal">0</div></div>
+      <div class="stat-item"><div class="stat-label">绑定关系总数</div><div class="stat-value" id="statBindTotal">0</div></div>
+    </div>
+  </div>
+
+  <div class="card" id="card-models">
+    <div class="card-header">
+      <div class="card-title">🤖 多模型管理</div>
+      <button class="btn btn-primary btn-sm" onclick="openModelModal()">+ 新增模型</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>名称</label><input class="form-control" id="f_m_name" placeholder="如：生产GPT" /></div>
+      <div class="form-group"><label>服务商</label><input class="form-control" id="f_m_provider" value="openai-compatible" /></div>
+      <div class="form-group"><label>Base URL</label><input class="form-control" id="f_m_base" placeholder="https://api..." /></div>
+      <div class="form-group"><label>API Key <span class="hint">(明文，入库自动加密)</span></label><input class="form-control" id="f_m_key" type="password" placeholder="sk-..." /></div>
+      <div class="form-group"><label>模型ID</label><input class="form-control" id="f_m_modelid" placeholder="gpt-4o-mini" /></div>
+      <div class="form-group"><label>Temperature (0~1)</label><input class="form-control" id="f_m_temp" type="number" step="0.1" min="0" max="2" value="0.7" /></div>
+      <div class="form-group"><label>max_tokens</label><input class="form-control" id="f_m_maxtok" type="number" min="0" value="0" /></div>
+      <div class="form-group"><label>状态</label>
+        <select class="form-control" id="f_m_status">
+          <option value="1">启用</option><option value="2">禁用</option>
+        </select>
+      </div>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="f_m_default" />
+      <label for="f_m_default" style="margin:0;font-size:13px;font-weight:500;color:#475569;">设为系统默认模型</label>
+    </div>
+    <div class="btn-row" style="margin-bottom:20px;">
+      <button class="btn btn-primary btn-sm" onclick="submitModel()">💾 提交新增</button>
+      <button class="btn btn-secondary btn-sm" onclick="clearModelForm()">清空表单</button>
+    </div>
+    <table id="modelTable">
+      <thead><tr>
+        <th>ID</th><th>名称</th><th>服务商</th><th>模型ID</th><th>温度</th><th>默认</th><th>状态</th><th style="width:300px;">操作</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card" id="card-skills">
+    <div class="card-header">
+      <div class="card-title">🧠 技能管理</div>
+      <button class="btn btn-primary btn-sm" onclick="openSkillModal()">+ 新增自定义技能</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchSkillTab('builtin')">内置技能</div>
+      <div class="tab" onclick="switchSkillTab('custom')">自定义技能</div>
+    </div>
+    <div class="tab-panel active" id="panel-builtin">
+      <table id="builtinSkillTable">
+        <thead><tr><th>名称</th><th>描述</th><th style="width:100px;">操作</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="tab-panel" id="panel-custom">
+      <div class="form-row">
+        <div class="form-group"><label>技能名称 (英文唯一)</label><input class="form-control" id="f_s_name" placeholder="如：my_custom_skill" /></div>
+        <div class="form-group"><label>代码路径</label><input class="form-control" id="f_s_codepath" placeholder="skills/custom.py" /></div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;"><label>描述</label><input class="form-control" id="f_s_desc" placeholder="告诉 LLM 何时及如何使用该技能" /></div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Parameters Schema (JSON)</label>
+        <textarea class="form-control" id="f_s_schema" rows="3" placeholder='{"type":"object","properties":{...}}'></textarea>
+      </div>
+      <div class="checkbox-row" style="margin-bottom:14px;">
+        <input type="checkbox" id="f_s_enabled" checked />
+        <label for="f_s_enabled" style="margin:0;font-size:13px;font-weight:500;color:#475569;">启用该技能</label>
+      </div>
+      <div class="btn-row" style="margin-bottom:20px;">
+        <button class="btn btn-primary btn-sm" onclick="submitSkill()">💾 提交新增</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearSkillForm()">清空表单</button>
+      </div>
+      <table id="customSkillTable">
+        <thead><tr>
+          <th>ID</th><th>名称</th><th>描述</th><th>代码路径</th><th>启用</th><th>创建时间</th><th style="width:180px;">操作</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="card-bindings">
+    <div class="card-header">
+      <div class="card-title">🔗 员工技能绑定</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>按员工ID过滤</label>
+        <div style="display:flex;gap:8px;">
+          <input class="form-control" id="filterEmpId" type="number" placeholder="输入员工ID..." />
+          <button class="btn btn-secondary btn-sm" onclick="applyEmpFilter()">过滤</button>
+          <button class="btn btn-secondary btn-sm" onclick="clearEmpFilter()">全部</button>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>员工ID</label><input class="form-control" id="f_b_empid" type="number" placeholder="如：1" /></div>
+      <div class="form-group"><label>技能 (下拉可选自定义 + 内置)</label>
+        <select class="form-control" id="f_b_skillid"><option value="">-- 请选择技能 --</option></select>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-bottom:20px;">
+      <button class="btn btn-primary btn-sm" onclick="submitBinding()">🔗 新增绑定</button>
+    </div>
+    <table id="bindingTable">
+      <thead><tr><th>ID</th><th>员工ID</th><th>技能ID</th><th>技能名称</th><th>创建时间</th><th style="width:80px;">操作</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modelModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modelModalTitle">编辑模型</h3>
+      <button class="modal-close" onclick="closeModal('modelModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editModelId" />
+      <div class="form-row">
+        <div class="form-group"><label>名称</label><input class="form-control" id="edit_m_name" /></div>
+        <div class="form-group"><label>服务商</label><input class="form-control" id="edit_m_provider" /></div>
+        <div class="form-group"><label>Base URL</label><input class="form-control" id="edit_m_base" /></div>
+        <div class="form-group"><label>API Key <span class="hint">(留空则不修改)</span></label><input class="form-control" id="edit_m_key" type="password" placeholder="输入新key或留空" /></div>
+        <div class="form-group"><label>模型ID</label><input class="form-control" id="edit_m_modelid" /></div>
+        <div class="form-group"><label>Temperature</label><input class="form-control" id="edit_m_temp" type="number" step="0.1" min="0" max="2" /></div>
+        <div class="form-group"><label>max_tokens</label><input class="form-control" id="edit_m_maxtok" type="number" min="0" /></div>
+        <div class="form-group"><label>状态</label>
+          <select class="form-control" id="edit_m_status">
+            <option value="1">启用</option><option value="2">禁用</option>
+          </select>
+        </div>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="edit_m_default" />
+        <label for="edit_m_default" style="margin:0;font-size:13px;font-weight:500;color:#475569;">设为默认模型</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modelModal')">取消</button>
+      <button class="btn btn-primary" onclick="submitEditModel()">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="skillModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="skillModalTitle">编辑自定义技能</h3>
+      <button class="modal-close" onclick="closeModal('skillModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editSkillId" />
+      <div class="form-row">
+        <div class="form-group"><label>技能名称</label><input class="form-control" id="edit_s_name" /></div>
+        <div class="form-group"><label>代码路径</label><input class="form-control" id="edit_s_codepath" /></div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;"><label>描述</label><input class="form-control" id="edit_s_desc" /></div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Parameters Schema (JSON)</label>
+        <textarea class="form-control" id="edit_s_schema" rows="4"></textarea>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="edit_s_enabled" />
+        <label for="edit_s_enabled" style="margin:0;font-size:13px;font-weight:500;color:#475569;">启用</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('skillModal')">取消</button>
+      <button class="btn btn-primary" onclick="submitEditSkill()">保存修改</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="testSkillModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="testSkillTitle">测试技能</h3>
+      <button class="modal-close" onclick="closeModal('testSkillModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="testSkillName" />
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>args 参数 (JSON 格式)</label>
+        <textarea class="form-control" id="testSkillArgs" rows="5" placeholder='{"param1":"value1"}'></textarea>
+      </div>
+      <div id="testSkillResult"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('testSkillModal')">关闭</button>
+      <button class="btn btn-primary" onclick="runTestSkill()">🚀 执行测试</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CURRENT_PAGE = "modelskills";
+let modelsCache = [];
+let builtinSkillsCache = [];
+let customSkillsCache = [];
+let bindingsCache = [];
+let currentEmpFilter = null;
+
+function markActiveTab() {
+  document.querySelectorAll(".nav-tab").forEach(t => {
+    if (t.dataset.tab === CURRENT_PAGE) t.classList.add("active");
+  });
+}
+window.refreshLoginBtnVisibility = function() {
+  document.querySelectorAll('.login-btn').forEach(function(b) {
+    const u = document.getElementById('navUser');
+    const label = u ? (u.textContent || '') : '';
+    const logged = !!(getToken() && label && !label.includes('未登录') && !label.includes('无效') && !label.includes('Token'));
+    b.style.display = logged ? 'none' : '';
+  });
+};
+function getToken() { return localStorage.getItem("api_token") || ""; }
+function saveToken() {
+  const v = document.getElementById("tokenInput").value.trim();
+  if (!v) { toast("请先粘贴 Token", "error"); return; }
+  localStorage.setItem("api_token", v);
+  toast("Token 已保存", "success");
+  loadMe();
+  window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility();
+}
+function clearToken() {
+  localStorage.removeItem("api_token");
+  document.getElementById("tokenInput").value = "";
+  document.getElementById("navUser").textContent = "未登录";
+  toast("已退出登录", "info");
+  window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility();
+}
+function authHeaders() {
+  const h = { "Content-Type": "application/json" };
+  const t = getToken();
+  if (t) h["Authorization"] = "Bearer " + t;
+  return h;
+}
+async function api(path, opts) {
+  try {
+    const res = await fetch(path, { ...opts, headers: authHeaders() });
+    if (res.status === 401) { toast("401 未授权，请检查 Token", "error"); return null; }
+    if (res.status === 204) return { success: true };
+    const ct = res.headers.get("Content-Type");
+    const body = (ct && ct.includes("application/json")) ? await res.json() : await res.text();
+    if (!res.ok) {
+      toast(typeof body === "object" ? (body.detail || body.message || "请求失败") : String(body), "error");
+      return null;
+    }
+    return body;
+  } catch (e) {
+    toast("网络错误: " + e.message, "error");
+    return null;
+  }
+}
+async function loadMe() {
+  const t = getToken();
+  if (!t) { window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility(); return; }
+  document.getElementById("tokenInput").value = t;
+  const me = await api("/users/me", { method: "GET" });
+  if (me) {
+    document.getElementById("navUser").textContent = "👤 " + (me.username || me.email || ("用户#" + me.id));
+  }
+  window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility();
+}
+function toast(msg, type) {
+  type = type || "info";
+  const el = document.createElement("div");
+  el.className = "toast toast-" + type;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateX(120%)"; el.style.transition = "all 0.25s"; }, 2400);
+  setTimeout(() => el.remove(), 2800);
+}
+function urlParam(name) {
+  const u = new URLSearchParams(location.search);
+  return u.get(name);
+}
+function fmtTime(dt) {
+  if (!dt) return "-";
+  const d = new Date(dt);
+  if (isNaN(d.getTime())) return String(dt);
+  const pad = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function showLogin(){ const m=document.getElementById('loginModal'); if(m) m.classList.add('show'); }
+function hideLogin(){ const m=document.getElementById('loginModal'); if(m) m.classList.remove('show'); }
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value.trim();
+  if(!u||!p){ alert('请输入用户名和密码'); return; }
+  try{
+    const fd=new FormData(); fd.append('username',u); fd.append('password',p);
+    const res=await fetch('/users/login',{method:'POST',body:fd});
+    if(!res.ok){ const t=await res.text(); toast('登录失败: '+(t||'HTTP '+res.status),'error'); return; }
+    const data=await res.json();
+    const tok=data&&(data.access_token||data.token);
+    if(!tok){ toast('登录响应缺少 token','error'); return; }
+    const inp1=document.getElementById('apiToken'); if(inp1) inp1.value=tok;
+    const inp2=document.getElementById('tokenInput'); if(inp2) inp2.value=tok;
+    hideLogin(); saveToken();
+    document.getElementById('loginUser').value='';
+    document.getElementById('loginPass').value='';
+  }catch(e){ toast('登录异常: '+e.message,'error'); }
+}
+
+function clearModelForm() {
+  ["f_m_name","f_m_base","f_m_key","f_m_modelid","f_m_maxtok"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("f_m_provider").value = "openai-compatible";
+  document.getElementById("f_m_temp").value = "0.7";
+  document.getElementById("f_m_maxtok").value = "0";
+  document.getElementById("f_m_status").value = "1";
+  document.getElementById("f_m_default").checked = false;
+}
+
+async function loadModels() {
+  const data = await api("/modelskills/models?limit=500", { method: "GET" });
+  if (!data) return;
+  modelsCache = data.items || [];
+  renderModelTable();
+  const defM = modelsCache.find(m => m.is_default);
+  document.getElementById("statModelTotal").textContent = data.total || modelsCache.length;
+  document.getElementById("statDefaultModel").textContent = defM ? (defM.name + " (#" + defM.id + ")") : "-";
+}
+function renderModelTable() {
+  const tb = document.querySelector("#modelTable tbody");
+  tb.innerHTML = "";
+  modelsCache.forEach(m => {
+    const tr = document.createElement("tr");
+    const def = m.is_default ? "✅" : "—";
+    const st = m.status === 1 ? `<span class="badge badge-active">启用</span>` : `<span class="badge badge-inactive">禁用</span>`;
+    tr.innerHTML = `<td>${m.id}</td>
+      <td><strong>${m.name||""}</strong></td>
+      <td>${m.provider||""}</td>
+      <td style="color:#6366f1;font-family:Consolas,monospace;font-size:12px;">${m.model_id||""}</td>
+      <td>${m.temperature}</td>
+      <td style="text-align:center;font-size:16px;">${def}</td>
+      <td>${st}</td>
+      <td><div class="op-btns">
+        <button class="btn btn-secondary btn-sm" onclick="setDefaultModel(${m.id})" title="设为默认">⭐默认</button>
+        <button class="btn btn-secondary btn-sm" onclick="assignToEmployee(${m.id})">👤指定给员工</button>
+        <button class="btn btn-secondary btn-sm" onclick="openEditModel(${m.id})">✏️编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="delModel(${m.id})">🗑</button>
+      </div></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+async function submitModel() {
+  const name = document.getElementById("f_m_name").value.trim();
+  const base = document.getElementById("f_m_base").value.trim();
+  const key = document.getElementById("f_m_key").value.trim();
+  const modelid = document.getElementById("f_m_modelid").value.trim();
+  if (!name || !base || !key || !modelid) {
+    toast("请填写必填字段：名称/Base URL/API Key/模型ID", "error"); return;
+  }
+  const body = {
+    name, provider: document.getElementById("f_m_provider").value.trim() || "openai-compatible",
+    base_url: base, api_key: key, model_id: modelid,
+    temperature: parseFloat(document.getElementById("f_m_temp").value) || 0.7,
+    max_tokens: parseInt(document.getElementById("f_m_maxtok").value) || 0,
+    is_default: document.getElementById("f_m_default").checked,
+    status: parseInt(document.getElementById("f_m_status").value) || 1
+  };
+  const r = await api("/modelskills/models", { method: "POST", body: JSON.stringify(body) });
+  if (r) { toast("模型创建成功", "success"); clearModelForm(); await loadModels(); }
+}
+
+function openModelModal() {
+  document.getElementById("modelModalTitle").textContent = "新增模型";
+  document.getElementById("editModelId").value = "";
+  clearModelEditForm();
+  showModal("modelModal");
+}
+function clearModelEditForm() {
+  ["edit_m_name","edit_m_provider","edit_m_base","edit_m_key","edit_m_modelid","edit_m_temp","edit_m_maxtok"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("edit_m_status").value = "1";
+  document.getElementById("edit_m_default").checked = false;
+}
+function openEditModel(id) {
+  const m = modelsCache.find(x => x.id === id);
+  if (!m) return;
+  document.getElementById("modelModalTitle").textContent = "编辑模型 #" + id;
+  document.getElementById("editModelId").value = id;
+  document.getElementById("edit_m_name").value = m.name || "";
+  document.getElementById("edit_m_provider").value = m.provider || "";
+  document.getElementById("edit_m_base").value = m.base_url || "";
+  document.getElementById("edit_m_key").value = "";
+  document.getElementById("edit_m_modelid").value = m.model_id || "";
+  document.getElementById("edit_m_temp").value = m.temperature ?? 0.7;
+  document.getElementById("edit_m_maxtok").value = m.max_tokens ?? 0;
+  document.getElementById("edit_m_status").value = String(m.status ?? 1);
+  document.getElementById("edit_m_default").checked = !!m.is_default;
+  showModal("modelModal");
+}
+async function submitEditModel() {
+  const id = Number(document.getElementById("editModelId").value);
+  if (!id) return;
+  const body = {};
+  const v = s => document.getElementById(s).value;
+  if (v("edit_m_name").trim()) body.name = v("edit_m_name").trim();
+  if (v("edit_m_provider").trim()) body.provider = v("edit_m_provider").trim();
+  if (v("edit_m_base").trim()) body.base_url = v("edit_m_base").trim();
+  if (v("edit_m_key").trim()) body.api_key = v("edit_m_key").trim();
+  if (v("edit_m_modelid").trim()) body.model_id = v("edit_m_modelid").trim();
+  if (v("edit_m_temp")) body.temperature = parseFloat(v("edit_m_temp"));
+  if (v("edit_m_maxtok")) body.max_tokens = parseInt(v("edit_m_maxtok"));
+  body.status = parseInt(v("edit_m_status")) || 1;
+  body.is_default = document.getElementById("edit_m_default").checked;
+  if (!Object.keys(body).length) { toast("无更新字段", "error"); return; }
+  const r = await api("/modelskills/models/" + id, { method: "PUT", body: JSON.stringify(body) });
+  if (r) { toast("模型已更新", "success"); closeModal("modelModal"); await loadModels(); }
+}
+async function setDefaultModel(id) {
+  const r = await api("/modelskills/models/" + id, { method: "PUT", body: JSON.stringify({ is_default: true }) });
+  if (r) { toast("已设为默认模型", "success"); await loadModels(); }
+}
+function assignToEmployee(model_id) {
+  location.href = "/static/employees.html?model_id=" + model_id;
+}
+async function delModel(id) {
+  if (!confirm("确认删除模型 #" + id + "?")) return;
+  const r = await api("/modelskills/models/" + id, { method: "DELETE" });
+  if (r) { toast("已删除模型", "success"); await loadModels(); }
+}
+
+function switchSkillTab(type) {
+  document.querySelectorAll(".tabs .tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  event.target.classList.add("active");
+  document.getElementById("panel-" + type).classList.add("active");
+}
+
+async function loadBuiltinSkills() {
+  const data = await api("/modelskills/skills/builtins", { method: "GET" });
+  if (!data) return;
+  builtinSkillsCache = data.items || [];
+  renderBuiltinSkillTable();
+}
+function renderBuiltinSkillTable() {
+  const tb = document.querySelector("#builtinSkillTable tbody");
+  tb.innerHTML = "";
+  builtinSkillsCache.forEach(s => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><code style="background:#eef2ff;color:#4f46e5;padding:3px 8px;border-radius:4px;font-size:12px;">${s.name}</code> <span class="badge badge-builtin">内置</span></td>
+      <td style="color:#64748b;">${s.description||"-"}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="openTestSkill('${s.name}')">🧪测试</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+async function loadCustomSkills() {
+  const data = await api("/modelskills/skills?limit=500", { method: "GET" });
+  if (!data) return;
+  customSkillsCache = data.items || [];
+  renderCustomSkillTable();
+  populateSkillSelect();
+  const enabledCount = (builtinSkillsCache ? builtinSkillsCache.length : 0) +
+                       customSkillsCache.filter(s => s.enabled).length;
+  document.getElementById("statSkillTotal").textContent = enabledCount;
+}
+function renderCustomSkillTable() {
+  const tb = document.querySelector("#customSkillTable tbody");
+  tb.innerHTML = "";
+  customSkillsCache.forEach(s => {
+    const tr = document.createElement("tr");
+    const en = s.enabled ? `<span class="badge badge-enabled">启用</span>` : `<span class="badge badge-disabled">禁用</span>`;
+    tr.innerHTML = `<td>${s.id}</td>
+      <td><code style="background:#fef3c7;color:#d97706;padding:3px 8px;border-radius:4px;font-size:12px;">${s.name}</code> <span class="badge badge-custom">自定义</span></td>
+      <td style="color:#64748b;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.description||""}">${s.description||"-"}</td>
+      <td style="font-size:12px;color:#64748b;font-family:Consolas,monospace;">${s.code_path||"-"}</td>
+      <td>${en}</td>
+      <td style="font-size:12px;color:#64748b;">${fmtTime(s.created_at)}</td>
+      <td><div class="op-btns">
+        <button class="btn btn-secondary btn-sm" onclick="openTestSkill('${s.name}')">🧪测试</button>
+        <button class="btn btn-secondary btn-sm" onclick="openEditSkill(${s.id})">✏️编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="delSkill(${s.id})">🗑</button>
+      </div></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function clearSkillForm() {
+  ["f_s_name","f_s_desc","f_s_codepath","f_s_schema"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("f_s_enabled").checked = true;
+}
+async function submitSkill() {
+  const name = document.getElementById("f_s_name").value.trim();
+  if (!name) { toast("请填写技能名称", "error"); return; }
+  let schema = null;
+  const schStr = document.getElementById("f_s_schema").value.trim();
+  if (schStr) { try { schema = JSON.parse(schStr); } catch (e) { toast("Schema JSON 格式错误", "error"); return; } }
+  const body = {
+    name,
+    description: document.getElementById("f_s_desc").value.trim() || null,
+    code_path: document.getElementById("f_s_codepath").value.trim() || null,
+    parameters_schema: schema,
+    enabled: document.getElementById("f_s_enabled").checked
+  };
+  const r = await api("/modelskills/skills", { method: "POST", body: JSON.stringify(body) });
+  if (r) { toast("技能创建成功", "success"); clearSkillForm(); await loadCustomSkills(); }
+}
+
+function openSkillModal() {
+  document.getElementById("skillModalTitle").textContent = "新增自定义技能";
+  document.getElementById("editSkillId").value = "";
+  clearSkillEditForm();
+  showModal("skillModal");
+}
+function clearSkillEditForm() {
+  ["edit_s_name","edit_s_desc","edit_s_codepath","edit_s_schema"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("edit_s_enabled").checked = true;
+}
+function openEditSkill(id) {
+  const s = customSkillsCache.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById("skillModalTitle").textContent = "编辑技能 #" + id;
+  document.getElementById("editSkillId").value = id;
+  document.getElementById("edit_s_name").value = s.name || "";
+  document.getElementById("edit_s_desc").value = s.description || "";
+  document.getElementById("edit_s_codepath").value = s.code_path || "";
+  document.getElementById("edit_s_schema").value = s.parameters_schema ? JSON.stringify(s.parameters_schema, null, 2) : "";
+  document.getElementById("edit_s_enabled").checked = !!s.enabled;
+  showModal("skillModal");
+}
+async function submitEditSkill() {
+  const id = Number(document.getElementById("editSkillId").value);
+  if (!id) return;
+  const body = {};
+  const nm = document.getElementById("edit_s_name").value.trim();
+  if (nm) body.name = nm;
+  body.description = document.getElementById("edit_s_desc").value || null;
+  body.code_path = document.getElementById("edit_s_codepath").value || null;
+  const schStr = document.getElementById("edit_s_schema").value;
+  if (schStr.trim()) { try { body.parameters_schema = JSON.parse(schStr); } catch (e) { toast("Schema JSON 错误", "error"); return; } }
+  body.enabled = document.getElementById("edit_s_enabled").checked;
+  const r = await api("/modelskills/skills/" + id, { method: "PUT", body: JSON.stringify(body) });
+  if (r) { toast("技能已更新", "success"); closeModal("skillModal"); await loadCustomSkills(); }
+}
+async function delSkill(id) {
+  if (!confirm("确认删除技能 #" + id + "?")) return;
+  const r = await api("/modelskills/skills/" + id, { method: "DELETE" });
+  if (r) { toast("已删除技能", "success"); await loadCustomSkills(); await loadBindings(); }
+}
+
+function openTestSkill(name) {
+  document.getElementById("testSkillTitle").textContent = "🧪 测试技能：" + name;
+  document.getElementById("testSkillName").value = name;
+  document.getElementById("testSkillArgs").value = "{}";
+  document.getElementById("testSkillResult").innerHTML = "";
+  showModal("testSkillModal");
+}
+async function runTestSkill() {
+  const name = document.getElementById("testSkillName").value;
+  const argStr = document.getElementById("testSkillArgs").value.trim();
+  let args = {};
+  try { args = argStr ? JSON.parse(argStr) : {}; } catch (e) { toast("args JSON 格式错误", "error"); return; }
+  const r = await api("/modelskills/skills/test", { method: "POST", body: JSON.stringify({ name, args }) });
+  if (r !== null) {
+    document.getElementById("testSkillResult").innerHTML =
+      `<div style="margin-top:10px;font-size:12px;font-weight:600;color:#16a34a;">✅ 执行结果：</div>
+       <div class="json-preview">${escapeHtml(JSON.stringify(r, null, 2))}</div>`;
+  }
+}
+
+function populateSkillSelect() {
+  const sel = document.getElementById("f_b_skillid");
+  const opts = [];
+  builtinSkillsCache.forEach(s => {
+    opts.push(`<option value="__builtin__:${s.name}" data-name="${s.name}">【内置】${s.name} - ${s.description||""}</option>`);
+  });
+  customSkillsCache.forEach(s => {
+    opts.push(`<option value="${s.id}" data-name="${s.name}">【自定义#${s.id}】${s.name} - ${s.description||""}</option>`);
+  });
+  sel.innerHTML = `<option value="">-- 请选择技能 --</option>` + opts.join("");
+}
+
+async function loadBindings() {
+  let url = "/modelskills/bindings?limit=500";
+  if (currentEmpFilter) url += "&employee_id=" + currentEmpFilter;
+  const data = await api(url, { method: "GET" });
+  if (!data) return;
+  bindingsCache = data.items || [];
+  renderBindingTable();
+  if (!currentEmpFilter) document.getElementById("statBindTotal").textContent = data.total || bindingsCache.length;
+}
+function renderBindingTable() {
+  const tb = document.querySelector("#bindingTable tbody");
+  tb.innerHTML = "";
+  const skillMap = {};
+  customSkillsCache.forEach(s => { skillMap[s.id] = s.name; });
+  bindingsCache.forEach(b => {
+    const tr = document.createElement("tr");
+    let sname = skillMap[b.skill_id] || ("技能#" + b.skill_id);
+    tr.innerHTML = `<td>${b.id}</td>
+      <td><strong>#${b.employee_id}</strong></td>
+      <td>${b.skill_id}</td>
+      <td style="color:#6366f1;font-family:Consolas,monospace;">${sname}</td>
+      <td style="font-size:12px;color:#64748b;">${fmtTime(b.created_at)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="delBinding(${b.id})">🗑</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function applyEmpFilter() {
+  const v = document.getElementById("filterEmpId").value;
+  if (v) {
+    currentEmpFilter = Number(v);
+    toast("已过滤员工 #" + currentEmpFilter, "info");
+  } else {
+    currentEmpFilter = null;
+  }
+  loadBindings();
+}
+function clearEmpFilter() {
+  currentEmpFilter = null;
+  document.getElementById("filterEmpId").value = "";
+  loadBindings();
+}
+
+async function submitBinding() {
+  const empId = Number(document.getElementById("f_b_empid").value);
+  const sel = document.getElementById("f_b_skillid");
+  const val = sel.value;
+  if (!empId || !val) { toast("请选择员工ID和技能", "error"); return; }
+  let skill_id;
+  if (val.startsWith("__builtin__:")) {
+    toast("内置技能需要先保存为自定义技能后再绑定（当前绑定接口只接受自定义技能ID）", "error");
+    return;
+  } else {
+    skill_id = Number(val);
+  }
+  const r = await api("/modelskills/bindings", { method: "POST", body: JSON.stringify({ employee_id: empId, skill_id }) });
+  if (r) { toast("绑定成功", "success"); document.getElementById("f_b_empid").value = ""; sel.value = ""; await loadBindings(); }
+}
+async function delBinding(id) {
+  if (!confirm("确认删除绑定 #" + id + "?")) return;
+  const r = await api("/modelskills/bindings/" + id, { method: "DELETE" });
+  if (r) { toast("已删除绑定", "success"); await loadBindings(); }
+}
+
+function showModal(id) { document.getElementById(id).classList.add("show"); }
+function closeModal(id) { document.getElementById(id).classList.remove("show"); }
+document.querySelectorAll(".modal-overlay").forEach(mo => {
+  mo.addEventListener("click", e => { if (e.target === mo) mo.classList.remove("show"); });
+});
+
+async function init() {
+  markActiveTab();
+  await loadMe();
+  await loadModels();
+  await loadBuiltinSkills();
+  await loadCustomSkills();
+  await loadBindings();
+  const allSkillTotal = builtinSkillsCache.length + customSkillsCache.filter(s => s.enabled).length;
+  document.getElementById("statSkillTotal").textContent = allSkillTotal;
+
+  const empId = urlParam("employee_id");
+  if (empId) {
+    document.getElementById("filterEmpId").value = empId;
+    document.getElementById("f_b_empid").value = empId;
+    currentEmpFilter = Number(empId);
+    await loadBindings();
+    setTimeout(() => {
+      document.getElementById("card-bindings").scrollIntoView({ behavior: "smooth", block: "start" });
+      toast("已自动过滤员工 #" + empId + " 的绑定", "info");
+    }, 200);
+  }
+}
+init();
+</script>
+<div id="loginModal" class="modal-mask" onclick="if(event.target===this)hideLogin()">
+  <div class="modal">
+    <h3>🔐 用户登录 · 获取 JWT Token</h3>
+    <div class="mbody">
+      <div>
+        <label>用户名 / 邮箱</label>
+        <input id="loginUser" type="text" placeholder="例如 admin 或你的邮箱" autocomplete="username" />
+      </div>
+      <div>
+        <label>密码</label>
+        <input id="loginPass" type="password" placeholder="你的登录密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="tip">登录成功后将自动调用 POST /users/login，读取响应中的 access_token 并保存到全局 localStorage（7 页共享）。</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-cancel" onclick="hideLogin()">取消</button>
+      <button class="btn-ok" onclick="doLogin()">登录</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

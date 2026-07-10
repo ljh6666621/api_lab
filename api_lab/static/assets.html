@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>数据资产分析 | 企业智能协同平台</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --deep-purple:#1e1b4b;
+  --indigo:#6366f1;
+  --cyan:#06b6d4;
+  --card-bg:#fafafa;
+  --desc:#64748b;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: #f5f7ff;
+  color: #1e293b;
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.top-nav {
+  background: linear-gradient(135deg, #1e1b4b 0%, #6366f1 55%, #06b6d4 100%);
+  display:flex; align-items:center; justify-content:space-between; padding:14px 32px;
+  color:#fff; position:sticky; top:0; z-index:999; box-shadow:0 6px 16px rgba(99,102,241,.18);
+}
+.top-nav .logo { font-size:18px; font-weight:700; letter-spacing:.5px; }
+.top-nav .tabs { display:flex; gap:6px; margin-left:24px; flex-wrap:wrap; }
+.top-nav .tabs a {
+  padding:8px 14px; border-radius:8px; color:rgba(255,255,255,.8); text-decoration:none;
+  font-size:13px; font-weight:500; transition:all .2s; border:1px solid transparent;
+}
+.top-nav .tabs a:hover { background:rgba(255,255,255,.12); color:#fff; }
+.top-nav .tabs a.active {
+  background:rgba(255,255,255,.22); color:#fff; border-color:rgba(255,255,255,.4);
+  backdrop-filter: blur(6px);
+}
+.top-nav .auth { display:flex; align-items:center; gap:8px; }
+.top-nav .auth input[type=password] {
+  padding:7px 12px; width:280px; border-radius:8px; border:none; background:rgba(255,255,255,.15);
+  color:#fff; font-size:13px; outline:none; transition:.2s;
+}
+.top-nav .auth input[type=password]::placeholder { color:rgba(255,255,255,.7); }
+.top-nav .auth input[type=password]:focus { background:rgba(255,255,255,.25); }
+.top-nav .auth button {
+  padding:7px 14px; border-radius:8px; border:none; background:#fff; color:#6366f1;
+  font-weight:600; font-size:13px; cursor:pointer; transition:.2s;
+}
+.top-nav .auth button:hover { transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.12); }
+.top-nav .auth .me { font-size:12px; color:rgba(255,255,255,.85); margin-right:6px; }
+.top-nav .auth .logout {
+  background:transparent; color:#fff; border:1px solid rgba(255,255,255,.4); padding:6px 10px;
+}
+.container { max-width:1400px; margin:0 auto; padding:28px 32px 48px; }
+.page-title { font-size:26px; font-weight:700; color:#1e1b4b; margin-bottom:4px; }
+.page-sub { font-size:14px; color:#64748b; margin-bottom:24px; }
+.card { background:#fff; border-radius:14px; padding:24px; box-shadow:0 4px 14px rgba(15,23,42,.05); margin-bottom:20px; }
+.card h3 { font-size:17px; font-weight:700; color:#1e1b4b; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; }
+.card .h3-actions { display:flex; gap:8px; }
+.btn { padding:8px 14px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:none; text-decoration:none; display:inline-flex; align-items:center; gap:6px; transition:.2s; }
+.btn-primary { background:linear-gradient(135deg,#6366f1,#06b6d4); color:#fff; }
+.btn-primary:hover { opacity:.92; transform:translateY(-1px); box-shadow:0 6px 14px rgba(99,102,241,.35); }
+.btn-ghost { background:#eef2ff; color:#6366f1; }
+.btn-ghost:hover { background:#e0e7ff; transform:translateY(-1px); }
+.btn-danger { background:#fee2e2; color:#dc2626; }
+.btn-sm { padding:5px 10px; font-size:12px; }
+form.inline-form { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-start; }
+form.inline-form .field { display:flex; flex-direction:column; gap:4px; }
+form.inline-form label { font-size:12px; color:#64748b; }
+input, textarea, select {
+  padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px;
+  outline:none; transition:.2s; background:#fff; min-width:180px;
+}
+input:focus, textarea:focus, select:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.15); }
+textarea { min-height:64px; font-family:inherit; width:100%; }
+table { width:100%; border-collapse:collapse; margin-top:16px; }
+table th { background:#f8fafc; color:#475569; font-weight:600; font-size:12px; padding:10px 12px; text-align:left; border-bottom:2px solid #e2e8f0; }
+table td { padding:10px 12px; font-size:13px; border-bottom:1px solid #f1f5f9; color:#334155; vertical-align:middle; }
+table tr:hover { background:#f8fafc; }
+.tag { display:inline-block; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:500; margin-right:4px; margin-bottom:2px; }
+.tag-green { background:#dcfce7; color:#166534; }
+.tag-yellow { background:#fef9c3; color:#854d0e; }
+.tag-blue { background:#dbeafe; color:#1e40af; }
+.tag-gray { background:#f1f5f9; color:#475569; }
+.tag-red { background:#fee2e2; color:#991b1b; }
+.tag-purple { background:#ede9fe; color:#6d28d9; }
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+.stat-card { background:#fff; padding:20px 22px; border-radius:14px; box-shadow:0 4px 14px rgba(15,23,42,.05); border-top:3px solid #6366f1; }
+.stat-card .label { font-size:13px; color:#64748b; margin-bottom:6px; }
+.stat-card .value { font-size:26px; font-weight:700; color:#1e1b4b; }
+.stat-card.c2 { border-top-color:#06b6d4; }
+.stat-card.c3 { border-top-color:#f59e0b; }
+.stat-card.c4 { border-top-color:#10b981; }
+.link-btn { color:#6366f1; cursor:pointer; text-decoration:underline; font-size:13px; }
+.link-btn:hover { color:#06b6d4; }
+.toast {
+  position:fixed; bottom:32px; right:32px; padding:12px 18px; border-radius:10px; background:#1e1b4b; color:#fff;
+  font-size:13px; z-index:9999; box-shadow:0 12px 24px rgba(0,0,0,.2); opacity:0; transform:translateY(8px); transition:.28s;
+}
+.toast.show { opacity:1; transform:translateY(0); }
+.toast.ok { background:#166534; } .toast.err { background:#991b1b; }
+.ops-group { display:flex; gap:6px; flex-wrap:wrap; }
+.bar-chart { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
+.bar-row { display:flex; align-items:center; gap:8px; font-size:12px; }
+.bar-row .bar-label { width:100px; color:#64748b; flex-shrink:0; }
+.bar-row .bar-track { flex:1; height:10px; background:#f1f5f9; border-radius:5px; overflow:hidden; }
+.bar-row .bar-fill { height:100%; background:linear-gradient(90deg,#6366f1,#06b6d4); border-radius:5px; }
+.bar-row .bar-val { width:50px; text-align:right; color:#475569; font-weight:600; flex-shrink:0; }
+.report-card {
+  margin-top:16px; padding:24px; border-radius:14px;
+  border:2px solid transparent;
+  background:linear-gradient(#fff,#fff) padding-box, linear-gradient(135deg,#6366f1,#06b6d4) border-box;
+}
+.report-card .report-title { font-size:16px; font-weight:700; color:#1e1b4b; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.report-card p { color:#334155; font-size:14px; line-height:1.8; white-space:pre-wrap; }
+.json-preview {
+  background:#f8fafc; border-radius:8px; padding:12px; margin-top:12px;
+  font-family: Consolas, monospace; font-size:12px; color:#334155; max-height:320px; overflow:auto;
+  white-space:pre-wrap; word-break:break-all; cursor:pointer;
+}
+.modal-mask {
+  position:fixed; inset:0; background:rgba(30,27,75,.5); z-index:9998; display:flex; align-items:center; justify-content:center;
+}
+.modal-box {
+  background:#fff; border-radius:14px; padding:24px; width:min(1100px, 94vw); max-height:88vh; overflow:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+}
+.modal-box h4 { font-size:18px; font-weight:700; color:#1e1b4b; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
+.modal-close { background:#fee2e2; color:#dc2626; border:none; border-radius:8px; padding:6px 12px; cursor:pointer; font-weight:600; font-size:13px; }
+.modal-mask{position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:none;align-items:center;justify-content:center;}
+.modal-mask.show{display:flex;}
+.modal{background:#fff;border-radius:14px;width:380px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.25);overflow:hidden;}
+.modal h3{padding:18px 22px 10px;font-size:17px;color:#1e1b4b;background:linear-gradient(90deg,rgba(99,102,241,0.1),rgba(6,182,212,0.08));margin:0;border-bottom:1px solid #eef2ff;}
+.modal .mbody{padding:20px 22px 12px;display:flex;flex-direction:column;gap:12px;}
+.modal label{font-size:12px;color:#475569;font-weight:600;}
+.modal input{padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;outline:none;}
+.modal input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.15);}
+.modal .mfoot{padding:12px 22px 20px;display:flex;gap:10px;justify-content:flex-end;}
+.modal button{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px;}
+.modal .btn-cancel{background:#f1f5f9;color:#475569;}
+.modal .btn-ok{background:linear-gradient(90deg,#6366f1,#06b6d4);color:#fff;}
+.modal .tip{font-size:12px;color:#94a3b8;line-height:1.5;padding:2px 2px;}
+.auth .login-btn{background:rgba(255,255,255,0.22);border:none;padding:5px 14px;border-radius:6px;color:#fff;cursor:pointer;font-size:13px;}
+.auth .login-btn:hover{background:rgba(255,255,255,0.32);}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div style="display:flex;align-items:center;">
+    <div class="logo">☖ 企业智能协同平台</div>
+    <div class="tabs">
+      <a href="/static/portal.html">工作台</a>
+      <a href="/static/pipelines.html">采集</a>
+      <a href="/static/assets.html">资产</a>
+      <a href="/static/index.html">问数</a>
+      <a href="/static/im.html">通讯</a>
+      <a href="/static/employees.html">员工</a>
+      <a href="/static/modelskills.html">模型</a>
+    </div>
+  </div>
+  <div class="auth">
+    <span class="me" id="currentUser">未登录</span>
+    <input id="apiToken" type="password" placeholder="粘贴 JWT Token (登录获取)" />
+    <button class="login-btn" onclick="showLogin()">登录</button>
+    <button onclick="saveToken()">应用</button>
+    <button class="logout" onclick="clearToken()">退出</button>
+  </div>
+</nav>
+
+<main class="container">
+  <h1 class="page-title">数据资产分析</h1>
+  <p class="page-sub">统一管理数据资产目录，手动/自动生成画像与 LLM 自然语言报告；点击「🔍 智能问数」跳转智能问数页面进行 NL2SQL 分析；点击「👤 员工分析」安排数字员工生成分析报告。</p>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">资产总数</div>
+      <div class="value" id="ovTotalAssets">--</div>
+    </div>
+    <div class="stat-card c2">
+      <div class="label">总行数</div>
+      <div class="value" id="ovTotalRows">--</div>
+    </div>
+    <div class="stat-card c3">
+      <div class="label">今日画像数</div>
+      <div class="value" id="ovTodayProfiles">--</div>
+    </div>
+    <div class="stat-card c4">
+      <div class="label">来源类型分布</div>
+      <div class="bar-chart" id="ovBySource" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <div class="card" id="assetFormCard">
+    <h3 id="assetFormTitle">新建 / 编辑资产
+      <span class="h3-actions">
+        <button class="btn btn-ghost btn-sm" onclick="toggleAssetForm()">切换表单</button>
+      </span>
+    </h3>
+    <form class="inline-form" id="assetForm" onsubmit="event.preventDefault(); submitAsset();">
+      <div class="field">
+        <label>名称 name *</label>
+        <input id="aName" placeholder="如 订单宽表" required />
+      </div>
+      <div class="field">
+        <label>source_type</label>
+        <select id="aSourceType">
+          <option value="manual">manual</option>
+          <option value="pipeline">pipeline</option>
+          <option value="table">table</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>source_table</label>
+        <input id="aSourceTable" placeholder="可选" />
+      </div>
+      <div class="field">
+        <label>pipeline_id</label>
+        <input id="aPipelineId" type="number" placeholder="可选" />
+      </div>
+      <div class="field">
+        <label>owner_id</label>
+        <input id="aOwnerId" type="number" placeholder="可选" />
+      </div>
+      <div class="field" style="flex:1;min-width:320px;">
+        <label>description</label>
+        <textarea id="aDesc" placeholder="资产描述，可选"></textarea>
+      </div>
+      <div class="field" style="flex:1;min-width:360px;">
+        <label>columns_info (JSON，可选)</label>
+        <textarea id="aCols" rows="3" placeholder='[{"name":"id","type":"int"}, {"name":"amount","type":"float"}]'></textarea>
+      </div>
+      <div class="field" style="flex:1;min-width:240px;">
+        <label>tags (逗号分隔)</label>
+        <input id="aTags" placeholder="如 交易,财务,2025" />
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" type="submit" id="assetSubmitBtn">+ 新增资产</button>
+          <button class="btn btn-ghost" type="button" id="assetCancelBtn" style="display:none;" onclick="cancelAssetEdit()">取消</button>
+        </div>
+      </div>
+      <input type="hidden" id="aEditId" value="" />
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>资产列表
+      <span class="h3-actions">
+        <button class="btn btn-ghost btn-sm" onclick="loadAssets()">刷新</button>
+      </span>
+    </h3>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>name</th>
+          <th>source_type</th>
+          <th>row_count</th>
+          <th>columns_count</th>
+          <th>tags</th>
+          <th>last_sync_at</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="assetsTable"></tbody>
+    </table>
+  </div>
+
+  <div class="card" id="profileCard">
+    <h3 id="profileTitle">画像快照预览区
+      <span class="h3-actions">
+        <button class="btn btn-ghost btn-sm" id="profileRefreshBtn" style="display:none;" onclick="refreshLatestProfile()">刷新最新画像</button>
+      </span>
+    </h3>
+    <div id="profileEmpty" style="text-align:center;color:#94a3b8;padding:24px;">选择一个资产点击「📈 生成画像」后，此处展示快照预览。</div>
+    <div id="profileContent" style="display:none;">
+      <div class="report-card">
+        <div class="report-title">📋 画像报告
+          <span id="profileMeta" class="tag tag-purple" style="margin-left:auto;"></span>
+        </div>
+        <p id="profileReportText"></p>
+      </div>
+      <div class="json-preview" id="profileSummary" onclick="toggleProfileSummary()"></div>
+      <div style="margin-top:8px;text-align:center;font-size:12px;color:#94a3b8;">↑ 点击 JSON 区域折叠/展开完整 summary</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const CURRENT_PAGE = "assets";
+(function markActiveTab() {
+  const map = { portal:"工作台", pipelines:"采集", assets:"资产", index:"问数", im:"通讯", employees:"员工", modelskills:"模型" };
+  const label = map[CURRENT_PAGE] || "";
+  document.querySelectorAll('.top-nav .tabs a').forEach(a => {
+    if (a.textContent.trim() === label) a.classList.add('active');
+  });
+})();
+
+window.refreshLoginBtnVisibility = function() {
+  document.querySelectorAll('.login-btn').forEach(function(b) {
+    const u = document.getElementById('currentUser');
+    const label = u ? (u.textContent || '') : '';
+    const logged = !!(getToken() && label && !label.includes('未登录') && !label.includes('无效') && !label.includes('Token'));
+    b.style.display = logged ? 'none' : '';
+  });
+};
+function getToken() { return localStorage.getItem('api_token') || ''; }
+function saveToken() {
+  const v = document.getElementById('apiToken').value.trim();
+  if (!v) { alert('请先粘贴 JWT Token（从 /users/login 登录响应的 access_token 获取）'); return; }
+  localStorage.setItem('api_token', v);
+  loadMe(); toast('Token 已保存', 'ok'); initAll();
+  window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility();
+}
+function clearToken() { localStorage.removeItem('api_token'); document.getElementById('apiToken').value=''; document.getElementById('currentUser').textContent='未登录'; toast('已退出登录'); window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility(); }
+function authHeaders(h={}) { const t = getToken(); return Object.assign({'Content-Type':'application/json'}, t ? { 'Authorization':'Bearer '+t } : {}, h); }
+async function api(path, opts={}) {
+  const res = await fetch(path, Object.assign({ headers: authHeaders(opts.body && !(opts.body instanceof FormData) ? {} : opts.headers || {}) }, opts));
+  if (res.status === 401) { toast('登录已过期或 Token 无效，请重新登录', 'err'); throw new Error('Unauthorized'); }
+  if (!res.ok) { const t = await res.text(); throw new Error(t || ('HTTP ' + res.status)); }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
+}
+async function loadMe() {
+  const inp = document.getElementById('apiToken'); if (inp) inp.value = getToken();
+  if (!getToken()) { window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility(); return; }
+  try { const u = await api('/users/me'); if (u && u.username) document.getElementById('currentUser').textContent = '👤 '+u.username + (u.dept_name?' · '+u.dept_name:''); }
+  catch(e) { document.getElementById('currentUser').textContent = 'Token 无效'; }
+  window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility();
+}
+function toast(msg, type='') {
+  let d = document.createElement('div'); d.className = 'toast ' + type; d.textContent = msg; document.body.appendChild(d);
+  requestAnimationFrame(()=>d.classList.add('show')); setTimeout(()=>{ d.classList.remove('show'); setTimeout(()=>d.remove(), 300); }, 2600);
+}
+function urlParam(k) { return new URLSearchParams(location.search).get(k); }
+function showLogin(){ const m=document.getElementById('loginModal'); if(m) m.classList.add('show'); }
+function hideLogin(){ const m=document.getElementById('loginModal'); if(m) m.classList.remove('show'); }
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value.trim();
+  if(!u||!p){ alert('请输入用户名和密码'); return; }
+  try{
+    const fd=new FormData(); fd.append('username',u); fd.append('password',p);
+    const res=await fetch('/users/login',{method:'POST',body:fd});
+    if(!res.ok){ const t=await res.text(); toast('登录失败: '+(t||'HTTP '+res.status),'err'); return; }
+    const data=await res.json();
+    const tok=data&&(data.access_token||data.token);
+    if(!tok){ toast('登录响应缺少 token','err'); return; }
+    const inp=document.getElementById('apiToken'); if(inp) inp.value=tok;
+    hideLogin(); saveToken();
+    document.getElementById('loginUser').value='';
+    document.getElementById('loginPass').value='';
+  }catch(e){ toast('登录异常: '+e.message,'err'); }
+}
+document.addEventListener('DOMContentLoaded', () => { loadMe(); initAll(); });
+
+let assetsCache = [];
+let currentProfileAssetId = null;
+let profileSummaryCollapsed = true;
+let fullSummaryText = '';
+
+async function initAll() {
+  if (!getToken()) return;
+  try {
+    await loadOverview();
+    await loadAssets();
+    await checkNewAssetParam();
+  } catch(e) { console.error(e); }
+}
+
+function sourceTag(s) {
+  if (s === 'manual') return '<span class="tag tag-gray">manual</span>';
+  if (s === 'pipeline') return '<span class="tag tag-blue">pipeline</span>';
+  if (s === 'table') return '<span class="tag tag-yellow">table</span>';
+  return '<span class="tag tag-gray">'+s+'</span>';
+}
+function fmtDate(d) {
+  if (!d) return '-';
+  try { return new Date(d).toLocaleString('zh-CN', {hour12:false}); } catch(e) { return d; }
+}
+function colCount(cols) {
+  if (!cols) return 0;
+  if (Array.isArray(cols)) return cols.length;
+  if (typeof cols === 'object') return Object.keys(cols).length;
+  return 0;
+}
+function renderTags(s) {
+  if (!s) return '<span class="tag tag-gray">无</span>';
+  return String(s).split(',').map(t => t.trim()).filter(Boolean).map(t => `<span class="tag tag-blue">${t}</span>`).join('');
+}
+
+async function loadOverview() {
+  try {
+    const ov = await api('/assets/overview');
+    document.getElementById('ovTotalAssets').textContent = ov.total_assets ?? 0;
+    document.getElementById('ovTotalRows').textContent = (ov.total_rows ?? 0).toLocaleString();
+    document.getElementById('ovTodayProfiles').textContent = ov.today_profiles ?? 0;
+    const src = ov.by_source_type || {};
+    const entries = Object.entries(src);
+    const max = entries.length ? Math.max(...entries.map(e => e[1]), 1) : 1;
+    const c4 = document.getElementById('ovBySource');
+    if (entries.length === 0) { c4.innerHTML = '<div style="font-size:12px;color:#94a3b8;">暂无数据</div>'; return; }
+    c4.innerHTML = entries.map(([k,v]) => `
+      <div class="bar-row">
+        <span class="bar-label">${k}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${(v/max*100).toFixed(1)}%"></div></div>
+        <span class="bar-val">${v}</span>
+      </div>
+    `).join('');
+  } catch(e) { console.error('overview fail', e); }
+}
+
+function toggleAssetForm() {
+  const f = document.getElementById('assetForm');
+  f.style.display = (f.style.display || 'flex') === 'none' ? 'flex' : 'none';
+}
+function cancelAssetEdit() {
+  document.getElementById('aEditId').value = '';
+  document.getElementById('assetSubmitBtn').textContent = '+ 新增资产';
+  document.getElementById('assetFormTitle').innerHTML = '新建 / 编辑资产 <span class="h3-actions"><button class="btn btn-ghost btn-sm" onclick="toggleAssetForm()">切换表单</button></span>';
+  document.getElementById('assetCancelBtn').style.display = 'none';
+  clearAssetForm();
+}
+function clearAssetForm() {
+  ['aName','aSourceTable','aPipelineId','aOwnerId','aDesc','aCols','aTags','aEditId'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('aSourceType').value = 'manual';
+}
+
+async function checkNewAssetParam() {
+  const n = urlParam('new');
+  const pid = urlParam('pipeline_id');
+  const rid = urlParam('run_id');
+  if (n !== '1') return;
+  document.getElementById('assetForm').scrollIntoView({ behavior:'smooth' });
+  document.getElementById('assetForm').style.display = 'flex';
+  if (pid) { document.getElementById('aPipelineId').value = pid; document.getElementById('aSourceType').value = 'pipeline'; document.getElementById('aName').value = '流水线 #'+pid+' 产出资产'; }
+  if (rid && pid) {
+    try {
+      const runs = await api('/pipelines/'+pid+'/runs?limit=30');
+      const r = runs.find(x => x.id === parseInt(rid)) || runs[0];
+      if (r && Array.isArray(r.data) && r.data.length) {
+        const first = r.data[0];
+        const cols = Object.keys(first).map(k => ({ name: k, type: typeof first[k] }));
+        document.getElementById('aCols').value = JSON.stringify(cols, null, 2);
+        if (!document.getElementById('aName').value) document.getElementById('aName').value = '流水线 #'+pid+' run #'+r.id+' 资产';
+        toast('已从 pipeline_run 预填 columns_info (共 '+cols.length+' 列)，请确认后提交', 'ok');
+      }
+    } catch(e) { console.error(e); }
+  }
+}
+
+async function submitAsset() {
+  const editId = document.getElementById('aEditId').value;
+  const name = document.getElementById('aName').value.trim();
+  const source_type = document.getElementById('aSourceType').value;
+  const source_table = document.getElementById('aSourceTable').value.trim() || null;
+  const pid_str = document.getElementById('aPipelineId').value.trim();
+  const pipeline_id = pid_str ? parseInt(pid_str) : null;
+  const oid_str = document.getElementById('aOwnerId').value.trim();
+  const owner_id = oid_str ? parseInt(oid_str) : null;
+  const description = document.getElementById('aDesc').value.trim() || null;
+  const tags = document.getElementById('aTags').value.trim() || null;
+  let columns_info = null;
+  const colsRaw = document.getElementById('aCols').value.trim();
+  if (colsRaw) {
+    try { columns_info = JSON.parse(colsRaw); }
+    catch(e) { toast('columns_info 必须是合法 JSON', 'err'); return; }
+  }
+  const payload = { name, source_type, source_table, pipeline_id, owner_id, description, tags, columns_info };
+  try {
+    if (editId) {
+      await api('/assets/'+parseInt(editId), { method:'PUT', body: JSON.stringify(payload) });
+      toast('资产 #'+editId+' 已更新', 'ok');
+    } else {
+      const r = await api('/assets', { method:'POST', body: JSON.stringify(payload) });
+      toast('资产已创建 #'+r.id, 'ok');
+    }
+    cancelAssetEdit();
+    await loadAssets(); await loadOverview();
+  } catch(e) { toast('提交失败: '+e.message, 'err'); }
+}
+
+async function loadAssets() {
+  const list = await api('/assets?skip=0&limit=50');
+  assetsCache = list;
+  renderAssets();
+}
+function renderAssets() {
+  const tb = document.getElementById('assetsTable');
+  if (assetsCache.length === 0) { tb.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:20px;">暂无资产</td></tr>`; return; }
+  tb.innerHTML = assetsCache.map(a => `
+    <tr>
+      <td>${a.id}</td>
+      <td><b style="color:#1e1b4b;">${a.name}</b></td>
+      <td>${sourceTag(a.source_type)}</td>
+      <td>${(a.row_count||0).toLocaleString()}</td>
+      <td>${colCount(a.columns_info)}</td>
+      <td>${renderTags(a.tags)}</td>
+      <td>${fmtDate(a.last_sync_at)}</td>
+      <td class="ops-group">
+        <button class="btn btn-primary btn-sm" onclick="genProfile(${a.id})">📈 生成画像</button>
+        <button class="btn btn-ghost btn-sm" onclick="showProfiles(${a.id})">📚 画像历史</button>
+        <button class="btn btn-primary btn-sm" onclick="toAskData(${a.id})">🔍 智能问数</button>
+        <button class="btn btn-primary btn-sm" onclick="toEmployeeAnalyze(${a.id})">👤 员工分析</button>
+        <button class="btn btn-ghost btn-sm" onclick="editAsset(${a.id})">✏️ 编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteAsset(${a.id})">🗑 删除</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function editAsset(id) {
+  const a = assetsCache.find(x => x.id === id);
+  if (!a) return;
+  document.getElementById('assetFormCard').scrollIntoView({ behavior:'smooth' });
+  document.getElementById('assetForm').style.display = 'flex';
+  document.getElementById('aEditId').value = a.id;
+  document.getElementById('assetSubmitBtn').textContent = '💾 保存修改';
+  document.getElementById('assetCancelBtn').style.display = 'inline-flex';
+  document.getElementById('assetFormTitle').innerHTML = `编辑资产 #${a.id} ${a.name} <span class="h3-actions"><button class="btn btn-ghost btn-sm" onclick="toggleAssetForm()">切换表单</button></span>`;
+  document.getElementById('aName').value = a.name || '';
+  document.getElementById('aSourceType').value = a.source_type || 'manual';
+  document.getElementById('aSourceTable').value = a.source_table || '';
+  document.getElementById('aPipelineId').value = a.pipeline_id || '';
+  document.getElementById('aOwnerId').value = a.owner_id || '';
+  document.getElementById('aDesc').value = a.description || '';
+  document.getElementById('aCols').value = a.columns_info != null ? (typeof a.columns_info === 'string' ? a.columns_info : JSON.stringify(a.columns_info, null, 2)) : '';
+  document.getElementById('aTags').value = a.tags || '';
+}
+
+async function deleteAsset(id) {
+  if (!confirm('确认删除资产 #'+id+' ？')) return;
+  try {
+    await api('/assets/'+id, { method:'DELETE' });
+    toast('已删除', 'ok'); await loadAssets(); await loadOverview();
+  } catch(e) { toast('删除失败: '+e.message, 'err'); }
+}
+
+async function genProfile(id) {
+  try {
+    const p = await api('/assets/'+id+'/profile', { method:'POST', body: JSON.stringify({ force: false }) });
+    toast('画像已生成 #'+p.id, 'ok');
+    currentProfileAssetId = id;
+    showProfile(p);
+    await loadOverview();
+  } catch(e) { toast('生成画像失败: '+e.message, 'err'); }
+}
+async function refreshLatestProfile() {
+  if (!currentProfileAssetId) return;
+  try {
+    const list = await api('/assets/'+currentProfileAssetId+'/profiles');
+    if (list && list[0]) showProfile(list[0]);
+  } catch(e) { console.error(e); }
+}
+function showProfile(p) {
+  document.getElementById('profileEmpty').style.display = 'none';
+  document.getElementById('profileContent').style.display = 'block';
+  document.getElementById('profileRefreshBtn').style.display = 'inline-flex';
+  const asset = assetsCache.find(a => a.id === p.asset_id);
+  document.getElementById('profileTitle').innerHTML = `画像快照 · ${asset ? asset.name : '资产#'+p.asset_id}
+    <span class="h3-actions">
+      <button class="btn btn-ghost btn-sm" onclick="refreshLatestProfile()">刷新最新画像</button>
+    </span>`;
+  document.getElementById('profileMeta').textContent = '画像ID ' + p.id + ' · 生成于 ' + fmtDate(p.generated_at);
+  document.getElementById('profileReportText').textContent = p.report_text || '（暂无 LLM 报告文本）';
+  fullSummaryText = p.summary != null ? (typeof p.summary === 'string' ? p.summary : JSON.stringify(p.summary, null, 2)) : '{}';
+  profileSummaryCollapsed = true;
+  renderSummaryPreview();
+  document.getElementById('profileCard').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function renderSummaryPreview() {
+  const el = document.getElementById('profileSummary');
+  let s = fullSummaryText;
+  if (profileSummaryCollapsed && s.length > 1200) {
+    s = s.slice(0, 1200) + '\n...(已折叠，点击展开完整 JSON)';
+  }
+  el.textContent = s;
+}
+function toggleProfileSummary() {
+  profileSummaryCollapsed = !profileSummaryCollapsed;
+  renderSummaryPreview();
+}
+
+async function showProfiles(id) {
+  try {
+    const list = await api('/assets/'+id+'/profiles');
+    const asset = assetsCache.find(a => a.id === id);
+    openModal(`画像历史 · ${asset ? asset.name : '资产#'+id}`, `
+      <table>
+        <thead>
+          <tr><th>ID</th><th>asset_id</th><th>generated_at</th><th>generated_by</th><th>report_text 摘要</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+          ${list.length === 0 ? `<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px;">暂无画像</td></tr>` : list.map(p => `
+            <tr>
+              <td>${p.id}</td>
+              <td>${p.asset_id}</td>
+              <td>${fmtDate(p.generated_at)}</td>
+              <td>${p.generated_by||'-'}</td>
+              <td style="max-width:360px;">${(p.report_text||'').slice(0,80)}${(p.report_text||'').length>80?'...':''}</td>
+              <td><button class="btn btn-ghost btn-sm" onclick="selectProfileForPreview(${JSON.stringify(p).replace(/"/g,'&quot;')}); closeModal();">查看</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `);
+  } catch(e) { toast('获取画像历史失败: '+e.message, 'err'); }
+}
+function selectProfileForPreview(p) {
+  currentProfileAssetId = p.asset_id;
+  showProfile(p);
+}
+
+function toAskData(id) {
+  location.href = '/static/index.html?asset_ids=' + id;
+}
+function toEmployeeAnalyze(id) {
+  const q = encodeURIComponent('请分析该资产');
+  location.href = '/static/employees.html?asset_id=' + id + '&task_type=asset_profile';
+}
+
+function openModal(title, html) {
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.id = '_modal_mask';
+  mask.innerHTML = `
+    <div class="modal-box">
+      <h4>${title} <button class="modal-close" onclick="closeModal()">✕ 关闭</button></h4>
+      <div>${html}</div>
+    </div>`;
+  mask.onclick = (e) => { if (e.target === mask) closeModal(); };
+  document.body.appendChild(mask);
+}
+function closeModal() {
+  const m = document.getElementById('_modal_mask');
+  if (m) m.remove();
+}
+</script>
+<div id="loginModal" class="modal-mask" onclick="if(event.target===this)hideLogin()">
+  <div class="modal">
+    <h3>🔐 用户登录 · 获取 JWT Token</h3>
+    <div class="mbody">
+      <div>
+        <label>用户名 / 邮箱</label>
+        <input id="loginUser" type="text" placeholder="例如 admin 或你的邮箱" autocomplete="username" />
+      </div>
+      <div>
+        <label>密码</label>
+        <input id="loginPass" type="password" placeholder="你的登录密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="tip">登录成功后将自动调用 POST /users/login，读取响应中的 access_token 并保存到全局 localStorage（7 页共享）。</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-cancel" onclick="hideLogin()">取消</button>
+      <button class="btn-ok" onclick="doLogin()">登录</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
