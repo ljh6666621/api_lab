@@ -1,4 +1,4 @@
-# API Lab 项目 - 成员 a 代码汇总
+# API Lab 项目 - 成员 李鑫 代码汇总
 
 **负责模块**：数据库模型设计  
 **日期**：2026-07-10  
@@ -24,18 +24,18 @@ __all__ = [
     "Department",
     "ChatSession",
     "LLMModel",
-    "Skill",
-    "SkillBinding",
-    "DataAsset",
-    "AssetProfile",
-    "DataSource",
-    "DataPipeline",
-    "PipelineRun",
-    "DigitalEmployee",
-    "EmployeeTaskRun",
-    "IMConversation",
-    "IMConversationMember",
-    "IMMessage",
+"技能",
+"技能绑定",
+"数据资产",
+“资产档案”，
+"数据源",
+“数据管道”，
+"管道运行
+"数字员工",
+"员工任务运行",
+"即时通讯会话",
+"即时通讯会话成员",
+"即时通讯消息",
 ]
 ```
 
@@ -47,10 +47,10 @@ __all__ = [
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime
 
-from core.database import Base
+从 core.database 导入 Base
 
 
-class User(Base):
+类 User（基类 Base）：
     """用户数据模型：存储系统用户的基本信息、账号状态及关联部门。"""
     __tablename__ = "users"
 
@@ -73,7 +73,7 @@ class User(Base):
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime
 
-from core.database import Base
+从 core.database 导入 Base
 
 
 class Department(Base):
@@ -98,7 +98,7 @@ class Department(Base):
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, DateTime
 
-from core.database import Base
+从 core.database 导入 Base
 
 
 class Product(Base):
@@ -124,10 +124,10 @@ from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, JSON, ForeignKey, Text
 from sqlalchemy.orm import relationship
 
-from core.database import Base
+从 core.database 导入 Base
 
 
-class DataSource(Base):
+类 DataSource(基类):
     """
     数据源模型：定义数据采集的来源配置，支持 HTTP API、爬虫、文件上传等多种类型。
     config 字段以 JSON 格式存储各类型特定参数（URL、Headers、方法、参数、提取路径等）。
@@ -430,19 +430,19 @@ class LLMModel(Base):
         doc="采样温度，0~2 之间，值越大随机性越高",
     )
     max_tokens = Column(
-        Integer,
-        default=0,
+整型,
+默认值=0,
         doc="最大生成长度（token 数），0 表示使用模型默认值",
     )
     is_default = Column(
-        Boolean,
-        default=False,
-        doc="是否为当前系统默认模型，同一时间仅一个为 True",
+布尔型,
+默认值为 False,
+说明：“是否为当前系统默认模型，同一时间仅一个为 True”
     )
     status = Column(
-        Integer,
-        default=1,
-        doc="状态：1=启用，2=禁用",
+整型,
+默认值为 1,
+说明：“状态：1=启用，2=禁用”
     )
     created_at = Column(
         DateTime(timezone=True),
@@ -457,9 +457,9 @@ class Skill(Base):
     __tablename__ = "skills"
 
     id = Column(
-        Integer,
+整型,
         primary_key=True,
-        autoincrement=True,
+自增=True,
         doc="主键 ID，自增",
     )
     name = Column(
@@ -483,7 +483,7 @@ class Skill(Base):
         doc="参数 Schema（JSON），符合 OpenAI function calling 的 parameters 格式",
     )
     enabled = Column(
-        Boolean,
+布尔型,
         default=True,
         doc="是否启用该技能，禁用后不会出现在 tools 列表中",
     )
@@ -503,18 +503,18 @@ class SkillBinding(Base):
     )
 
     id = Column(
-        Integer,
+整型,
         primary_key=True,
-        autoincrement=True,
+自增=True,
         doc="主键 ID，自增",
     )
     employee_id = Column(
-        Integer,
+整型,
         nullable=False,
         doc="员工 ID（对应 users.id），被绑定技能的用户",
     )
     skill_id = Column(
-        Integer,
+整型,
         nullable=False,
         doc="技能 ID（对应 skills.id），被绑定的技能",
     )
@@ -530,9 +530,9 @@ class SkillBinding(Base):
 ## models/chat_session.py
 
 ```python
-from sqlalchemy import Column, Integer, String, DateTime, JSON, func
+从 sqlalchemy 导入 Column、Integer、String、DateTime、JSON 和 func
 
-from core.database import Base
+从 core.database 导入 Base
 
 
 class ChatSession(Base):
