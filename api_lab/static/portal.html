@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>企业智能协同平台 · 工作台</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --deep-purple: #1e1b4b;
+    --indigo: #6366f1;
+    --cyan: #06b6d4;
+    --card-bg: #fafafa;
+    --card-title: #1e1b4b;
+    --card-desc: #64748b;
+    --btn-primary: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+    --btn-secondary: #ffffff;
+    --btn-secondary-border: #e2e8f0;
+    --shadow-hover: 0 20px 40px -12px rgba(99, 102, 241, 0.25);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f5f7ff;
+    color: #1e293b;
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .toast {
+    position:fixed; bottom:32px; right:32px; padding:12px 18px; border-radius:10px; background:#1e1b4b; color:#fff;
+    font-size:13px; z-index:9999; box-shadow:0 12px 24px rgba(0,0,0,.2); opacity:0; transform:translateY(8px); transition:.28s;
+  }
+  .toast.show { opacity:1; transform:translateY(0); }
+  .toast.ok { background:#166534; }
+  .toast.err { background:#991b1b; }
+
+  .banner {
+    background: linear-gradient(135deg, #1e1b4b 0%, #6366f1 55%, #06b6d4 100%);
+    padding: 32px 48px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+  }
+  .banner::before {
+    content: "";
+    position: absolute;
+    top: -60%; right: -10%;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(6,182,212,0.25) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .banner::after {
+    content: "";
+    position: absolute;
+    bottom: -40%; left: 10%;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .banner-title {
+    color: #ffffff;
+    position: relative;
+    z-index: 1;
+  }
+  .banner-title h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .banner-title p {
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+  }
+  .banner .tabs {
+    display:flex; gap:8px; margin:0 24px; flex-wrap:wrap;
+    flex: 1 1 100%; order: 3; margin-top: 18px;
+    position: relative; z-index: 1;
+    justify-content: center;
+  }
+  .banner .tabs a {
+    padding:8px 16px; border-radius:8px; color:rgba(255,255,255,.8); text-decoration:none;
+    font-size:13px; font-weight:500; transition:all .2s; border:1px solid transparent;
+  }
+  .banner .tabs a:hover { background:rgba(255,255,255,.12); color:#fff; }
+  .banner .tabs a.active {
+    background:rgba(255,255,255,.22); color:#fff; border-color:rgba(255,255,255,.4);
+    backdrop-filter: blur(6px);
+  }
+  .banner-buttons {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .banner-buttons a {
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: 1px solid rgba(255,255,255,0.35);
+    color: #ffffff;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(8px);
+  }
+  .banner-buttons a:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  }
+  .auth {
+    display:flex; align-items:center; gap:8px;
+    margin-left: 16px;
+    position: relative; z-index: 1;
+  }
+  .auth input[type=password] {
+    padding:7px 12px; width:260px; border-radius:8px; border:none; background:rgba(255,255,255,.15);
+    color:#fff; font-size:13px; outline:none; transition:.2s;
+  }
+  .auth input[type=password]::placeholder { color:rgba(255,255,255,.7); }
+  .auth input[type=password]:focus { background:rgba(255,255,255,.25); }
+  .auth button {
+    padding:7px 14px; border-radius:8px; border:none; background:#fff; color:#6366f1;
+    font-weight:600; font-size:13px; cursor:pointer; transition:.2s;
+  }
+  .auth button:hover { transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.12); }
+  .auth .me { font-size:12px; color:rgba(255,255,255,.85); margin-right:6px; }
+  .auth .logout {
+    background:transparent; color:#fff; border:1px solid rgba(255,255,255,.4); padding:6px 10px;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: -20px auto 0;
+    padding: 0 24px 48px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 4px;
+    background: var(--btn-primary);
+    opacity: 0;
+    transition: opacity 0.28s;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+  }
+  .card:hover::before {
+    opacity: 1;
+  }
+  .card-icon {
+    font-size: 56px;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--card-title);
+    margin-bottom: 10px;
+  }
+  .card-desc {
+    font-size: 14px;
+    color: var(--card-desc);
+    line-height: 1.65;
+    flex: 1;
+    margin-bottom: 20px;
+  }
+  .card-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .card-actions a {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .btn-api {
+    background: var(--btn-primary);
+    color: #ffffff;
+  }
+  .btn-api:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(99,102,241,0.35);
+  }
+  .btn-frontend {
+    background: var(--btn-secondary);
+    color: #6366f1;
+    border-color: var(--btn-secondary-border);
+  }
+  .btn-frontend:hover {
+    border-color: #6366f1;
+    background: #eef2ff;
+    transform: translateY(-1px);
+  }
+
+  .footer {
+    text-align: center;
+    padding: 28px 24px;
+    font-size: 13px;
+    color: #94a3b8;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 24px;
+  }
+  .footer .arch {
+    color: #64748b;
+    margin: 6px 0 10px;
+  }
+  .footer .module-links {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .footer .module-links a {
+    color: #6366f1;
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.2s;
+  }
+  .footer .module-links a:hover {
+    color: #06b6d4;
+  }
+
+  @media (max-width: 960px) {
+    .banner { padding: 24px 24px; }
+    .banner-title h1 { font-size: 22px; }
+    .modules-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .modules-grid { grid-template-columns: 1fr; }
+    .banner-buttons, .auth { flex-wrap: wrap; width: 100%; margin: 6px 0 0; }
+    .auth input[type=password] { flex: 1; min-width: 180px; }
+  }
+.modal-mask{position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:none;align-items:center;justify-content:center;}
+.modal-mask.show{display:flex;}
+.modal{background:#fff;border-radius:14px;width:380px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.25);overflow:hidden;}
+.modal h3{padding:18px 22px 10px;font-size:17px;color:#1e1b4b;background:linear-gradient(90deg,rgba(99,102,241,0.1),rgba(6,182,212,0.08));margin:0;border-bottom:1px solid #eef2ff;}
+.modal .mbody{padding:20px 22px 12px;display:flex;flex-direction:column;gap:12px;}
+.modal label{font-size:12px;color:#475569;font-weight:600;}
+.modal input{padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;outline:none;}
+.modal input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.15);}
+.modal .mfoot{padding:12px 22px 20px;display:flex;gap:10px;justify-content:flex-end;}
+.modal button{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px;}
+.modal .btn-cancel{background:#f1f5f9;color:#475569;}
+.modal .btn-ok{background:linear-gradient(90deg,#6366f1,#06b6d4);color:#fff;}
+.modal .tip{font-size:12px;color:#94a3b8;line-height:1.5;padding:2px 2px;}
+.auth .login-btn{background:rgba(255,255,255,0.22);border:none;padding:5px 14px;border-radius:6px;color:#fff;cursor:pointer;font-size:13px;}
+.auth .login-btn:hover{background:rgba(255,255,255,0.32);}
+</style>
+</head>
+<body>
+  <header class="banner">
+    <div class="banner-title">
+      <h1>☖ 智能协同平台 · 工作台</h1>
+      <p>覆盖数据采集 → 资产分析 → 智能问数 → 即时协作 → 数字员工 → 模型管理的全链路协同能力</p>
+    </div>
+    <div class="tabs">
+      <a href="/static/portal.html">工作台</a>
+      <a href="/static/pipelines.html">采集</a>
+      <a href="/static/assets.html">资产</a>
+      <a href="/static/index.html">问数</a>
+      <a href="/static/im.html">通讯</a>
+      <a href="/static/employees.html">员工</a>
+      <a href="/static/modelskills.html">模型</a>
+    </div>
+    <nav class="banner-buttons">
+      <a href="/docs" target="_blank">API 文档 (/docs)</a>
+      <a href="/static/index.html" target="_blank">智能问数</a>
+      <a href="/static/im.html" target="_blank">即时通讯</a>
+    </nav>
+    <div class="auth">
+      <span class="me" id="currentUser">未登录</span>
+      <input id="apiToken" type="password" placeholder="粘贴 JWT Token (登录获取)" />
+      <button class="login-btn" onclick="showLogin()">登录</button>
+      <button onclick="saveToken()">应用</button>
+      <button class="logout" onclick="clearToken()">退出</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="modules-grid" id="modules">
+
+      <article class="card" id="pipelines">
+        <div class="card-icon">📥</div>
+        <h2 class="card-title">数据采集流水线</h2>
+        <p class="card-desc">支持 HTTP API / 爬虫脚本 / CSV 上传多源接入；cron 定时调度自动注册 APScheduler；可视化 run 历史追踪。</p>
+        <div class="card-actions">
+          <a class="btn-api" href="/static/pipelines.html">开始</a>
+        </div>
+      </article>
+
+      <article class="card" id="assets">
+        <div class="card-icon">📊</div>
+        <h2 class="card-title">数据资产分析</h2>
+        <p class="card-desc">统一资产目录管理；pandas 统计画像 + LLM 自然语言报告；1h 智能缓存；历史画像快照追溯与全资产仪表盘。</p>
+        <div class="card-actions">
+          <a class="btn-api" href="/static/assets.html">开始</a>
+        </div>
+      </article>
+
+      <article class="card" id="chat">
+        <div class="card-icon">💬</div>
+        <h2 class="card-title">智能问数</h2>
+        <p class="card-desc">多轮会话式 NL2SQL，自动保存上下文（最近 20 条）；可绑定真实资产表结构；SQL 白名单拦截确保只读安全。</p>
+        <div class="card-actions">
+          <a class="btn-api" href="/static/index.html">开始</a>
+        </div>
+      </article>
+
+      <article class="card" id="im">
+        <div class="card-icon">💡</div>
+        <h2 class="card-title">即时通讯</h2>
+        <p class="card-desc">单聊 / 群聊 / 数字员工会话；WebSocket 实时推送同会话成员；心跳离线自动降级为 3 秒轮询；数字员工自动回复。</p>
+        <div class="card-actions">
+          <a class="btn-api" href="/static/im.html">开始</a>
+        </div>
+      </article>
+
+      <article class="card" id="employees">
+        <div class="card-icon">🤖</div>
+        <h2 class="card-title">数字员工</h2>
+        <p class="card-desc">9 种人格角色 + 自定义模型组合；单/多轮对话自动拼 system prompt；任务模式（流水线/画像/NL2SQL报告）一键编排执行。</p>
+        <div class="card-actions">
+          <a class="btn-api" href="/static/employees.html">开始</a>
+        </div>
+      </article>
+
+      <article class="card" id="modelskills">
+        <div class="card-icon">🧩</div>
+        <h2 class="card-title">模型与技能管理</h2>
+        <p class="card-desc">多模型 CRUD（api_key Fernet 加密入库，响应掩码脱敏）；内置 4 技能 + 自定义技能；数字员工 ↔ 技能灵活绑定编排。</p>
+        <div class="card-actions">
+          <a class="btn-api" href="/static/modelskills.html">开始</a>
+        </div>
+      </article>
+
+    </section>
+
+    <footer class="footer">
+      <div>© 实训项目 — 企业智能协同平台 API Lab</div>
+      <div class="arch">分层架构：routers / services / models / schemas / core</div>
+      <nav class="module-links">
+        <a href="#pipelines">数据采集流水线</a>
+        <a href="#assets">数据资产分析</a>
+        <a href="#chat">智能问数</a>
+        <a href="#im">即时通讯</a>
+        <a href="#employees">数字员工</a>
+        <a href="#modelskills">模型与技能管理</a>
+      </nav>
+    </footer>
+  </main>
+
+<script>
+const CURRENT_PAGE = "portal";
+(function markActiveTab() {
+  const map = { portal:"工作台", pipelines:"采集", assets:"资产", index:"问数", im:"通讯", employees:"员工", modelskills:"模型" };
+  const label = map[CURRENT_PAGE] || "";
+  document.querySelectorAll('.banner .tabs a').forEach(a => {
+    if (a.textContent.trim() === label) a.classList.add('active');
+  });
+})();
+
+window.refreshLoginBtnVisibility = function() {
+  document.querySelectorAll('.login-btn').forEach(function(b) {
+    const u = document.getElementById('currentUser');
+    const label = u ? (u.textContent || '') : '';
+    const logged = !!(getToken() && label && !label.includes('未登录') && !label.includes('无效') && !label.includes('Token'));
+    b.style.display = logged ? 'none' : '';
+  });
+};
+function getToken() { return localStorage.getItem('api_token') || ''; }
+function saveToken() {
+  const v = document.getElementById('apiToken').value.trim();
+  if (!v) { alert('请先粘贴 JWT Token（从 /users/login 登录响应的 access_token 获取）'); return; }
+  localStorage.setItem('api_token', v);
+  loadMe(); toast('Token 已保存', 'ok');
+  window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility();
+}
+function clearToken() { localStorage.removeItem('api_token'); document.getElementById('apiToken').value=''; document.getElementById('currentUser').textContent='未登录'; toast('已退出登录'); window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility(); }
+function authHeaders(h={}) { const t = getToken(); return Object.assign({'Content-Type':'application/json'}, t ? { 'Authorization':'Bearer '+t } : {}, h); }
+async function api(path, opts={}) {
+  const res = await fetch(path, Object.assign({ headers: authHeaders(opts.body && !(opts.body instanceof FormData) ? {} : opts.headers || {}) }, opts));
+  if (res.status === 401) { toast('登录已过期或 Token 无效，请重新登录', 'err'); throw new Error('Unauthorized'); }
+  if (!res.ok) { const t = await res.text(); throw new Error(t || ('HTTP ' + res.status)); }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
+}
+async function loadMe() {
+  const inp = document.getElementById('apiToken'); if (inp) inp.value = getToken();
+  if (!getToken()) { window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility(); return; }
+  try { const u = await api('/users/me'); if (u && u.username) document.getElementById('currentUser').textContent = '👤 '+u.username + (u.dept_name?' · '+u.dept_name:''); }
+  catch(e) { document.getElementById('currentUser').textContent = 'Token 无效'; }
+  window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility();
+}
+function toast(msg, type='') {
+  let d = document.createElement('div'); d.className = 'toast ' + type; d.textContent = msg; document.body.appendChild(d);
+  requestAnimationFrame(()=>d.classList.add('show')); setTimeout(()=>{ d.classList.remove('show'); setTimeout(()=>d.remove(), 300); }, 2600);
+}
+function urlParam(k) { return new URLSearchParams(location.search).get(k); }
+function showLogin(){ const m=document.getElementById('loginModal'); if(m) m.classList.add('show'); }
+function hideLogin(){ const m=document.getElementById('loginModal'); if(m) m.classList.remove('show'); }
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value.trim();
+  if(!u||!p){ alert('请输入用户名和密码'); return; }
+  try{
+    const fd=new FormData(); fd.append('username',u); fd.append('password',p);
+    const res=await fetch('/users/login',{method:'POST',body:fd});
+    if(!res.ok){ const t=await res.text(); toast('登录失败: '+(t||'HTTP '+res.status),'err'); return; }
+    const data=await res.json();
+    const tok=data&&(data.access_token||data.token);
+    if(!tok){ toast('登录响应缺少 token','err'); return; }
+    const inp=document.getElementById('apiToken'); if(inp) inp.value=tok;
+    hideLogin(); saveToken();
+    document.getElementById('loginUser').value='';
+    document.getElementById('loginPass').value='';
+  }catch(e){ toast('登录异常: '+e.message,'err'); }
+}
+document.addEventListener('DOMContentLoaded', () => { loadMe(); });
+</script>
+<div id="loginModal" class="modal-mask" onclick="if(event.target===this)hideLogin()">
+  <div class="modal">
+    <h3>🔐 用户登录 · 获取 JWT Token</h3>
+    <div class="mbody">
+      <div>
+        <label>用户名 / 邮箱</label>
+        <input id="loginUser" type="text" placeholder="例如 admin 或你的邮箱" autocomplete="username" />
+      </div>
+      <div>
+        <label>密码</label>
+        <input id="loginPass" type="password" placeholder="你的登录密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="tip">登录成功后将自动调用 POST /users/login，读取响应中的 access_token 并保存到全局 localStorage（7 页共享）。</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-cancel" onclick="hideLogin()">取消</button>
+      <button class="btn-ok" onclick="doLogin()">登录</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

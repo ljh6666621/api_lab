@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>数据采集流水线 | 企业智能协同平台</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --deep-purple:#1e1b4b;
+  --indigo:#6366f1;
+  --cyan:#06b6d4;
+  --card-bg:#fafafa;
+  --desc:#64748b;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: #f5f7ff;
+  color: #1e293b;
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.top-nav {
+  background: linear-gradient(135deg, #1e1b4b 0%, #6366f1 55%, #06b6d4 100%);
+  display:flex; align-items:center; justify-content:space-between; padding:14px 32px;
+  color:#fff; position:sticky; top:0; z-index:999; box-shadow:0 6px 16px rgba(99,102,241,.18);
+}
+.top-nav .logo { font-size:18px; font-weight:700; letter-spacing:.5px; }
+.top-nav .tabs { display:flex; gap:6px; margin-left:24px; flex-wrap:wrap; }
+.top-nav .tabs a {
+  padding:8px 14px; border-radius:8px; color:rgba(255,255,255,.8); text-decoration:none;
+  font-size:13px; font-weight:500; transition:all .2s; border:1px solid transparent;
+}
+.top-nav .tabs a:hover { background:rgba(255,255,255,.12); color:#fff; }
+.top-nav .tabs a.active {
+  background:rgba(255,255,255,.22); color:#fff; border-color:rgba(255,255,255,.4);
+  backdrop-filter: blur(6px);
+}
+.top-nav .auth { display:flex; align-items:center; gap:8px; }
+.top-nav .auth input[type=password] {
+  padding:7px 12px; width:280px; border-radius:8px; border:none; background:rgba(255,255,255,.15);
+  color:#fff; font-size:13px; outline:none; transition:.2s;
+}
+.top-nav .auth input[type=password]::placeholder { color:rgba(255,255,255,.7); }
+.top-nav .auth input[type=password]:focus { background:rgba(255,255,255,.25); }
+.top-nav .auth button {
+  padding:7px 14px; border-radius:8px; border:none; background:#fff; color:#6366f1;
+  font-weight:600; font-size:13px; cursor:pointer; transition:.2s;
+}
+.top-nav .auth button:hover { transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.12); }
+.top-nav .auth .me { font-size:12px; color:rgba(255,255,255,.85); margin-right:6px; }
+.top-nav .auth .logout {
+  background:transparent; color:#fff; border:1px solid rgba(255,255,255,.4); padding:6px 10px;
+}
+.container { max-width:1400px; margin:0 auto; padding:28px 32px 48px; }
+.page-title { font-size:26px; font-weight:700; color:#1e1b4b; margin-bottom:4px; }
+.page-sub { font-size:14px; color:#64748b; margin-bottom:24px; }
+.card { background:#fff; border-radius:14px; padding:24px; box-shadow:0 4px 14px rgba(15,23,42,.05); margin-bottom:20px; }
+.card h3 { font-size:17px; font-weight:700; color:#1e1b4b; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; }
+.card .h3-actions { display:flex; gap:8px; }
+.btn { padding:8px 14px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; border:none; text-decoration:none; display:inline-flex; align-items:center; gap:6px; transition:.2s; }
+.btn-primary { background:linear-gradient(135deg,#6366f1,#06b6d4); color:#fff; }
+.btn-primary:hover { opacity:.92; transform:translateY(-1px); box-shadow:0 6px 14px rgba(99,102,241,.35); }
+.btn-ghost { background:#eef2ff; color:#6366f1; }
+.btn-ghost:hover { background:#e0e7ff; transform:translateY(-1px); }
+.btn-danger { background:#fee2e2; color:#dc2626; }
+.btn-sm { padding:5px 10px; font-size:12px; }
+form.inline-form { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+form.inline-form .field { display:flex; flex-direction:column; gap:4px; }
+form.inline-form label { font-size:12px; color:#64748b; }
+input, textarea, select {
+  padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px;
+  outline:none; transition:.2s; background:#fff; min-width:180px;
+}
+input:focus, textarea:focus, select:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.15); }
+textarea { min-height:64px; font-family:inherit; width:100%; }
+table { width:100%; border-collapse:collapse; margin-top:16px; }
+table th { background:#f8fafc; color:#475569; font-weight:600; font-size:12px; padding:10px 12px; text-align:left; border-bottom:2px solid #e2e8f0; }
+table td { padding:10px 12px; font-size:13px; border-bottom:1px solid #f1f5f9; color:#334155; vertical-align:middle; }
+table tr:hover { background:#f8fafc; }
+.tag { display:inline-block; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:500; }
+.tag-green { background:#dcfce7; color:#166534; }
+.tag-yellow { background:#fef9c3; color:#854d0e; }
+.tag-blue { background:#dbeafe; color:#1e40af; }
+.tag-gray { background:#f1f5f9; color:#475569; }
+.tag-red { background:#fee2e2; color:#991b1b; }
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+.stat-card { background:#fff; padding:20px 22px; border-radius:14px; box-shadow:0 4px 14px rgba(15,23,42,.05); border-top:3px solid #6366f1; }
+.stat-card .label { font-size:13px; color:#64748b; margin-bottom:6px; }
+.stat-card .value { font-size:26px; font-weight:700; color:#1e1b4b; }
+.stat-card .sub { font-size:12px; color:#94a3b8; margin-top:4px; }
+.stat-card.c2 { border-top-color:#06b6d4; }
+.stat-card.c3 { border-top-color:#f59e0b; }
+.stat-card.c4 { border-top-color:#10b981; }
+.link-btn { color:#6366f1; cursor:pointer; text-decoration:underline; font-size:13px; }
+.link-btn:hover { color:#06b6d4; }
+.toast {
+  position:fixed; bottom:32px; right:32px; padding:12px 18px; border-radius:10px; background:#1e1b4b; color:#fff;
+  font-size:13px; z-index:9999; box-shadow:0 12px 24px rgba(0,0,0,.2); opacity:0; transform:translateY(8px); transition:.28s;
+}
+.toast.show { opacity:1; transform:translateY(0); }
+.toast.ok { background:#166534; }
+.toast.err { background:#991b1b; }
+.ops-group { display:flex; gap:6px; flex-wrap:wrap; }
+.data-preview {
+  background:#f8fafc; border-radius:8px; padding:12px; margin-top:8px;
+  font-family: Consolas, monospace; font-size:12px; color:#334155; max-height:200px; overflow:auto;
+  white-space:pre-wrap; word-break:break-all;
+}
+.expand-btn { cursor:pointer; color:#6366f1; user-select:none; }
+.form-sep { height:16px; }
+.modal-mask{position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:none;align-items:center;justify-content:center;}
+.modal-mask.show{display:flex;}
+.modal{background:#fff;border-radius:14px;width:380px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.25);overflow:hidden;}
+.modal h3{padding:18px 22px 10px;font-size:17px;color:#1e1b4b;background:linear-gradient(90deg,rgba(99,102,241,0.1),rgba(6,182,212,0.08));margin:0;border-bottom:1px solid #eef2ff;}
+.modal .mbody{padding:20px 22px 12px;display:flex;flex-direction:column;gap:12px;}
+.modal label{font-size:12px;color:#475569;font-weight:600;}
+.modal input{padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;outline:none;}
+.modal input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,0.15);}
+.modal .mfoot{padding:12px 22px 20px;display:flex;gap:10px;justify-content:flex-end;}
+.modal button{padding:8px 18px;border-radius:8px;border:none;cursor:pointer;font-size:13px;}
+.modal .btn-cancel{background:#f1f5f9;color:#475569;}
+.modal .btn-ok{background:linear-gradient(90deg,#6366f1,#06b6d4);color:#fff;}
+.modal .tip{font-size:12px;color:#94a3b8;line-height:1.5;padding:2px 2px;}
+.auth .login-btn{background:rgba(255,255,255,0.22);border:none;padding:5px 14px;border-radius:6px;color:#fff;cursor:pointer;font-size:13px;}
+.auth .login-btn:hover{background:rgba(255,255,255,0.32);}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div style="display:flex;align-items:center;">
+    <div class="logo">☖ 企业智能协同平台</div>
+    <div class="tabs">
+      <a href="/static/portal.html">工作台</a>
+      <a href="/static/pipelines.html">采集</a>
+      <a href="/static/assets.html">资产</a>
+      <a href="/static/index.html">问数</a>
+      <a href="/static/im.html">通讯</a>
+      <a href="/static/employees.html">员工</a>
+      <a href="/static/modelskills.html">模型</a>
+    </div>
+  </div>
+  <div class="auth">
+    <span class="me" id="currentUser">未登录</span>
+    <input id="apiToken" type="password" placeholder="粘贴 JWT Token (登录获取)" />
+    <button class="login-btn" onclick="showLogin()">登录</button>
+    <button onclick="saveToken()">应用</button>
+    <button class="logout" onclick="clearToken()">退出</button>
+  </div>
+</nav>
+
+<main class="container">
+  <h1 class="page-title">数据采集流水线</h1>
+  <p class="page-sub">管理数据源、编排采集管道、手动/定时运行、查看运行历史、CSV 文件上传。管道成功运行后可点击「📊 同步为资产」跳转资产页一键入库；点击「🤖 交员工」可创建数字员工任务自动调度。</p>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">数据源总数</div>
+      <div class="value" id="statSources">--</div>
+    </div>
+    <div class="stat-card c2">
+      <div class="label">管道总数</div>
+      <div class="value" id="statPipelines">--</div>
+    </div>
+    <div class="stat-card c3">
+      <div class="label">今日运行次数</div>
+      <div class="value" id="statTodayRuns">--</div>
+    </div>
+    <div class="stat-card c4">
+      <div class="label">成功 / 总数</div>
+      <div class="value" id="statSuccess">--</div>
+      <div class="sub" id="statSuccessPct"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>数据源管理
+      <span class="h3-actions">
+        <button class="btn btn-ghost btn-sm" onclick="toggleSourceForm()">切换表单</button>
+      </span>
+    </h3>
+    <form class="inline-form" id="sourceForm" onsubmit="event.preventDefault(); createSource();">
+      <div class="field">
+        <label>名称 name</label>
+        <input id="srcName" placeholder="如 订单API" required />
+      </div>
+      <div class="field">
+        <label>类型 type</label>
+        <select id="srcType">
+          <option value="http_api">http_api</option>
+          <option value="crawler">crawler</option>
+          <option value="upload">upload</option>
+        </select>
+      </div>
+      <div class="field" style="flex:1;min-width:320px;">
+        <label>config (JSON)</label>
+        <textarea id="srcConfig" placeholder='{"url":"https://api.example.com/orders","headers":{},"method":"GET"}' required>{"url":"https://api.example.com","headers":{},"method":"GET"}</textarea>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary" type="submit">+ 新增</button>
+      </div>
+      <div class="field" id="srcEditFields" style="display:none;">
+        <label>&nbsp;</label>
+        <button class="btn btn-ghost" type="button" onclick="cancelSourceEdit()">取消编辑</button>
+      </div>
+      <input type="hidden" id="srcEditId" value="" />
+    </form>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>name</th>
+          <th>type</th>
+          <th>status</th>
+          <th>created_at</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="sourcesTable"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>管道管理
+      <span class="h3-actions">
+        <button class="btn btn-ghost btn-sm" onclick="togglePipelineForm()">切换表单</button>
+      </span>
+    </h3>
+    <form class="inline-form" id="pipelineForm" onsubmit="event.preventDefault(); createPipeline();">
+      <div class="field">
+        <label>名称 name</label>
+        <input id="pipName" placeholder="如 订单每日采集" required />
+      </div>
+      <div class="field">
+        <label>数据源 source_id</label>
+        <select id="pipSourceId" required></select>
+      </div>
+      <div class="field">
+        <label>schedule (cron)</label>
+        <input id="pipSchedule" placeholder="*/5 * * * * (可空)" />
+      </div>
+      <div class="field">
+        <label>target_asset_id (可空)</label>
+        <input id="pipTargetAsset" type="number" placeholder="资产ID" />
+      </div>
+      <div class="field" style="flex:1;min-width:320px;">
+        <label>extract_rules (JSON)</label>
+        <textarea id="pipRules" placeholder='{"field_map":{"old":"new"},"filter":{"k":"v"}}'>{"field_map":{},"filter":{}}</textarea>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary" type="submit">+ 新增</button>
+      </div>
+      <div class="field" id="pipEditFields" style="display:none;">
+        <label>&nbsp;</label>
+        <button class="btn btn-ghost" type="button" onclick="cancelPipelineEdit()">取消编辑</button>
+      </div>
+      <input type="hidden" id="pipEditId" value="" />
+    </form>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>name</th>
+          <th>source</th>
+          <th>schedule</th>
+          <th>status</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="pipelinesTable"></tbody>
+    </table>
+  </div>
+
+  <div class="card" id="runsCard">
+    <h3>运行历史 (最近30条)
+      <span class="h3-actions">
+        <button class="btn btn-ghost btn-sm" onclick="loadAllRuns()">刷新</button>
+      </span>
+    </h3>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>pipeline_id</th>
+          <th>triggered_by</th>
+          <th>status</th>
+          <th>rows_count</th>
+          <th>start_at</th>
+          <th>end_at</th>
+          <th>error_msg</th>
+          <th>data</th>
+        </tr>
+      </thead>
+      <tbody id="runsTable"></tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+const CURRENT_PAGE = "pipelines";
+(function markActiveTab() {
+  const map = { portal:"工作台", pipelines:"采集", assets:"资产", index:"问数", im:"通讯", employees:"员工", modelskills:"模型" };
+  const label = map[CURRENT_PAGE] || "";
+  document.querySelectorAll('.top-nav .tabs a').forEach(a => {
+    if (a.textContent.trim() === label) a.classList.add('active');
+  });
+})();
+
+window.refreshLoginBtnVisibility = function() {
+  document.querySelectorAll('.login-btn').forEach(function(b) {
+    const u = document.getElementById('currentUser');
+    const label = u ? (u.textContent || '') : '';
+    const logged = !!(getToken() && label && !label.includes('未登录') && !label.includes('无效') && !label.includes('Token'));
+    b.style.display = logged ? 'none' : '';
+  });
+};
+function getToken() { return localStorage.getItem('api_token') || ''; }
+function saveToken() {
+  const v = document.getElementById('apiToken').value.trim();
+  if (!v) { alert('请先粘贴 JWT Token（从 /users/login 登录响应的 access_token 获取）'); return; }
+  localStorage.setItem('api_token', v);
+  loadMe(); toast('Token 已保存', 'ok'); initAll();
+  window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility();
+}
+function clearToken() { localStorage.removeItem('api_token'); document.getElementById('apiToken').value=''; document.getElementById('currentUser').textContent='未登录'; toast('已退出登录'); window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility(); }
+function authHeaders(h={}) { const t = getToken(); return Object.assign({'Content-Type':'application/json'}, t ? { 'Authorization':'Bearer '+t } : {}, h); }
+async function api(path, opts={}) {
+  const res = await fetch(path, Object.assign({ headers: authHeaders(opts.body && !(opts.body instanceof FormData) ? {} : opts.headers || {}) }, opts));
+  if (res.status === 401) { toast('登录已过期或 Token 无效，请重新登录', 'err'); throw new Error('Unauthorized'); }
+  if (!res.ok) { const t = await res.text(); throw new Error(t || ('HTTP ' + res.status)); }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : res.text();
+}
+async function loadMe() {
+  const inp = document.getElementById('apiToken'); if (inp) inp.value = getToken();
+  if (!getToken()) { window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility(); return; }
+  try { const u = await api('/users/me'); if (u && u.username) document.getElementById('currentUser').textContent = '👤 '+u.username + (u.dept_name?' · '+u.dept_name:''); }
+  catch(e) { document.getElementById('currentUser').textContent = 'Token 无效'; }
+  window.refreshLoginBtnVisibility && window.refreshLoginBtnVisibility();
+}
+function toast(msg, type='') {
+  let d = document.createElement('div'); d.className = 'toast ' + type; d.textContent = msg; document.body.appendChild(d);
+  requestAnimationFrame(()=>d.classList.add('show')); setTimeout(()=>{ d.classList.remove('show'); setTimeout(()=>d.remove(), 300); }, 2600);
+}
+function urlParam(k) { return new URLSearchParams(location.search).get(k); }
+function showLogin(){ const m=document.getElementById('loginModal'); if(m) m.classList.add('show'); }
+function hideLogin(){ const m=document.getElementById('loginModal'); if(m) m.classList.remove('show'); }
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value.trim();
+  if(!u||!p){ alert('请输入用户名和密码'); return; }
+  try{
+    const fd=new FormData(); fd.append('username',u); fd.append('password',p);
+    const res=await fetch('/users/login',{method:'POST',body:fd});
+    if(!res.ok){ const t=await res.text(); toast('登录失败: '+(t||'HTTP '+res.status),'err'); return; }
+    const data=await res.json();
+    const tok=data&&(data.access_token||data.token);
+    if(!tok){ toast('登录响应缺少 token','err'); return; }
+    const inp=document.getElementById('apiToken'); if(inp) inp.value=tok;
+    hideLogin(); saveToken();
+    document.getElementById('loginUser').value='';
+    document.getElementById('loginPass').value='';
+  }catch(e){ toast('登录异常: '+e.message,'err'); }
+}
+document.addEventListener('DOMContentLoaded', () => { loadMe(); initAll(); });
+
+let sourcesCache = [];
+let pipelinesCache = [];
+let runsCache = [];
+
+async function initAll() {
+  if (!getToken()) return;
+  try {
+    await loadSources();
+    await loadPipelines();
+    await loadStats();
+    await loadAllRuns();
+  } catch(e) { console.error(e); }
+}
+
+function statusTag(s) {
+  if (s === 1 || s === 'success') return `<span class="tag tag-green">启用/成功</span>`;
+  if (s === 0 || s === 'failed') return `<span class="tag tag-red">停用/失败</span>`;
+  if (s === 'running') return `<span class="tag tag-blue">运行中</span>`;
+  return `<span class="tag tag-gray">${s}</span>`;
+}
+function sourceTypeTag(t) {
+  if (t === 'http_api') return `<span class="tag tag-blue">http_api</span>`;
+  if (t === 'crawler') return `<span class="tag tag-yellow">crawler</span>`;
+  if (t === 'upload') return `<span class="tag tag-green">upload</span>`;
+  return `<span class="tag tag-gray">${t}</span>`;
+}
+function fmtDate(d) {
+  if (!d) return '-';
+  try { return new Date(d).toLocaleString('zh-CN', {hour12:false}); } catch(e) { return d; }
+}
+
+async function loadSources() {
+  const list = await api('/pipelines/sources?limit=200');
+  sourcesCache = list;
+  renderSources();
+  const sel = document.getElementById('pipSourceId');
+  sel.innerHTML = list.map(s => `<option value="${s.id}">#${s.id} ${s.name}</option>`).join('');
+}
+function renderSources() {
+  const tb = document.getElementById('sourcesTable');
+  if (sourcesCache.length === 0) { tb.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px;">暂无数据源</td></tr>`; return; }
+  tb.innerHTML = sourcesCache.map(s => `
+    <tr>
+      <td>${s.id}</td>
+      <td>${s.name}</td>
+      <td>${sourceTypeTag(s.type)}</td>
+      <td>${statusTag(s.status)}</td>
+      <td>${fmtDate(s.created_at)}</td>
+      <td class="ops-group">
+        <button class="btn btn-ghost btn-sm" onclick="editSource(${s.id})">✏️ 编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSource(${s.id})">🗑 删除</button>
+      </td>
+    </tr>
+    <tr id="srcEditRow_${s.id}" style="display:none;">
+      <td colspan="6" style="padding:0;">
+        <div style="padding:16px;background:#f8fafc;">
+          <div class="inline-form" style="margin-bottom:8px;">
+            <div class="field"><label>名称</label><input id="se_${s.id}_name" value='${(s.name||'').replace(/'/g,"&#39;")}'></div>
+            <div class="field"><label>类型</label>
+              <select id="se_${s.id}_type">
+                <option value="http_api" ${s.type==='http_api'?'selected':''}>http_api</option>
+                <option value="crawler" ${s.type==='crawler'?'selected':''}>crawler</option>
+                <option value="upload" ${s.type==='upload'?'selected':''}>upload</option>
+              </select>
+            </div>
+            <div class="field"><label>状态</label>
+              <select id="se_${s.id}_status">
+                <option value="1" ${s.status===1?'selected':''}>启用</option>
+                <option value="0" ${s.status===0?'selected':''}>停用</option>
+              </select>
+            </div>
+            <div class="field" style="flex:1;min-width:320px;">
+              <label>config JSON</label>
+              <textarea id="se_${s.id}_config">${JSON.stringify(s.config||{}, null, 2)}</textarea>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-primary btn-sm" onclick="saveSourceEdit(${s.id})">保存</button>
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('srcEditRow_${s.id}').style.display='none'">关闭</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+function toggleSourceForm() {
+  const f = document.getElementById('sourceForm');
+  f.style.display = f.style.display === 'none' ? 'flex' : (f.style.display || 'flex') === 'none' ? 'flex' : 'none';
+}
+async function createSource() {
+  const name = document.getElementById('srcName').value.trim();
+  const type = document.getElementById('srcType').value;
+  let config;
+  try { config = JSON.parse(document.getElementById('srcConfig').value); }
+  catch(e) { toast('config 必须是合法 JSON', 'err'); return; }
+  try {
+    await api('/pipelines/sources', { method:'POST', body: JSON.stringify({ name, type, config, status: 1 }) });
+    toast('数据源已创建', 'ok');
+    document.getElementById('srcName').value='';
+    document.getElementById('srcConfig').value='{"url":"https://api.example.com","headers":{},"method":"GET"}';
+    await loadSources(); await loadStats();
+  } catch(e) { toast('创建失败: ' + e.message, 'err'); }
+}
+function editSource(id) {
+  document.getElementById('srcEditRow_'+id).style.display = 'table-row';
+}
+function cancelSourceEdit() {
+  document.getElementById('srcEditId').value='';
+  document.getElementById('srcEditFields').style.display='none';
+}
+async function saveSourceEdit(id) {
+  const name = document.getElementById('se_'+id+'_name').value.trim();
+  const type = document.getElementById('se_'+id+'_type').value;
+  const status = parseInt(document.getElementById('se_'+id+'_status').value);
+  let config;
+  try { config = JSON.parse(document.getElementById('se_'+id+'_config').value); }
+  catch(e) { toast('config 必须是合法 JSON', 'err'); return; }
+  try {
+    await api('/pipelines/sources/'+id, { method:'PUT', body: JSON.stringify({ name, type, status, config }) });
+    toast('已更新', 'ok'); document.getElementById('srcEditRow_'+id).style.display='none';
+    await loadSources();
+  } catch(e) { toast('更新失败: '+e.message, 'err'); }
+}
+async function deleteSource(id) {
+  if (!confirm('确认删除该数据源？')) return;
+  try {
+    await api('/pipelines/sources/'+id, { method:'DELETE' });
+    toast('已删除', 'ok'); await loadSources(); await loadStats();
+  } catch(e) { toast('删除失败: '+e.message, 'err'); }
+}
+
+async function loadPipelines() {
+  const list = await api('/pipelines?limit=200');
+  pipelinesCache = list;
+  renderPipelines();
+}
+function renderPipelines() {
+  const tb = document.getElementById('pipelinesTable');
+  if (pipelinesCache.length === 0) { tb.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px;">暂无管道</td></tr>`; return; }
+  tb.innerHTML = pipelinesCache.map(p => {
+    const src = sourcesCache.find(s => s.id === p.source_id);
+    const srcText = src ? `#${src.id} ${src.name}` : `#${p.source_id}`;
+    return `
+    <tr>
+      <td>${p.id}</td>
+      <td>${p.name}</td>
+      <td>${srcText}</td>
+      <td>${p.schedule ? `<span class="tag tag-blue">${p.schedule}</span>` : '<span class="tag tag-gray">手动</span>'}</td>
+      <td>${statusTag(p.status)}</td>
+      <td class="ops-group">
+        <button class="btn btn-primary btn-sm" onclick="runPipeline(${p.id})">▶️ 运行</button>
+        <button class="btn btn-ghost btn-sm" onclick="uploadCSV(${p.id})">📥 上传CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="scrollToRuns(${p.id})">📜 历史</button>
+        <button class="btn btn-primary btn-sm" onclick="syncToAsset(${p.id})">📊 同步为资产</button>
+        <button class="btn btn-primary btn-sm" onclick="toEmployee(${p.id})">🤖 交员工</button>
+        <button class="btn btn-ghost btn-sm" onclick="editPipeline(${p.id})">✏️ 编辑</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePipeline(${p.id})">🗑 删除</button>
+      </td>
+    </tr>
+    <tr id="pipEditRow_${p.id}" style="display:none;">
+      <td colspan="6" style="padding:0;">
+        <div style="padding:16px;background:#f8fafc;">
+          <div class="inline-form" style="margin-bottom:8px;">
+            <div class="field"><label>名称</label><input id="pe_${p.id}_name" value='${(p.name||'').replace(/'/g,"&#39;")}'></div>
+            <div class="field"><label>source_id</label>
+              <select id="pe_${p.id}_source">
+                ${sourcesCache.map(s => `<option value="${s.id}" ${p.source_id===s.id?'selected':''}>#${s.id} ${s.name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field"><label>schedule</label><input id="pe_${p.id}_schedule" value="${p.schedule||''}"></div>
+            <div class="field"><label>target_asset_id</label><input id="pe_${p.id}_target" type="number" value="${p.target_asset_id||''}"></div>
+            <div class="field"><label>状态</label>
+              <select id="pe_${p.id}_status">
+                <option value="1" ${p.status===1?'selected':''}>启用</option>
+                <option value="0" ${p.status===0?'selected':''}>停用</option>
+              </select>
+            </div>
+            <div class="field" style="flex:1;min-width:320px;">
+              <label>extract_rules JSON</label>
+              <textarea id="pe_${p.id}_rules">${JSON.stringify(p.extract_rules||{}, null, 2)}</textarea>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-primary btn-sm" onclick="savePipelineEdit(${p.id})">保存</button>
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('pipEditRow_${p.id}').style.display='none'">关闭</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    `;
+  }).join('');
+}
+function togglePipelineForm() {
+  const f = document.getElementById('pipelineForm');
+  f.style.display = (f.style.display || 'flex') === 'none' ? 'flex' : 'none';
+}
+async function createPipeline() {
+  const name = document.getElementById('pipName').value.trim();
+  const source_id = parseInt(document.getElementById('pipSourceId').value);
+  const schedule = document.getElementById('pipSchedule').value.trim() || null;
+  const target_asset_id_str = document.getElementById('pipTargetAsset').value.trim();
+  const target_asset_id = target_asset_id_str ? parseInt(target_asset_id_str) : null;
+  let extract_rules;
+  try { extract_rules = JSON.parse(document.getElementById('pipRules').value); }
+  catch(e) { toast('extract_rules 必须是合法 JSON', 'err'); return; }
+  try {
+    await api('/pipelines', { method:'POST', body: JSON.stringify({ name, source_id, schedule, extract_rules, target_asset_id, status: 1 }) });
+    toast('管道已创建', 'ok');
+    document.getElementById('pipName').value='';
+    document.getElementById('pipSchedule').value='';
+    document.getElementById('pipTargetAsset').value='';
+    await loadPipelines(); await loadStats();
+  } catch(e) { toast('创建失败: ' + e.message, 'err'); }
+}
+function editPipeline(id) {
+  document.getElementById('pipEditRow_'+id).style.display = 'table-row';
+}
+function cancelPipelineEdit() {
+  document.getElementById('pipEditId').value='';
+  document.getElementById('pipEditFields').style.display='none';
+}
+async function savePipelineEdit(id) {
+  const name = document.getElementById('pe_'+id+'_name').value.trim();
+  const source_id = parseInt(document.getElementById('pe_'+id+'_source').value);
+  const schedule = document.getElementById('pe_'+id+'_schedule').value.trim() || null;
+  const target_str = document.getElementById('pe_'+id+'_target').value.trim();
+  const target_asset_id = target_str ? parseInt(target_str) : null;
+  const status = parseInt(document.getElementById('pe_'+id+'_status').value);
+  let extract_rules;
+  try { extract_rules = JSON.parse(document.getElementById('pe_'+id+'_rules').value); }
+  catch(e) { toast('extract_rules 必须是合法 JSON', 'err'); return; }
+  try {
+    await api('/pipelines/'+id, { method:'PUT', body: JSON.stringify({ name, source_id, schedule, extract_rules, target_asset_id, status }) });
+    toast('已更新', 'ok'); document.getElementById('pipEditRow_'+id).style.display='none';
+    await loadPipelines();
+  } catch(e) { toast('更新失败: '+e.message, 'err'); }
+}
+async function deletePipeline(id) {
+  if (!confirm('确认删除该管道？')) return;
+  try {
+    await api('/pipelines/'+id, { method:'DELETE' });
+    toast('已删除', 'ok'); await loadPipelines(); await loadStats();
+  } catch(e) { toast('删除失败: '+e.message, 'err'); }
+}
+async function runPipeline(id) {
+  try {
+    const r = await api('/pipelines/'+id+'/run', { method:'POST', body: JSON.stringify({ force: false }) });
+    toast('运行已触发 #'+r.id, 'ok');
+    await loadAllRuns(); await loadStats();
+  } catch(e) { toast('运行失败: '+e.message, 'err'); }
+}
+function uploadCSV(id) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.csv';
+  inp.onchange = async () => {
+    const f = inp.files[0]; if (!f) return;
+    try {
+      const fd = new FormData();
+      fd.append('file', f);
+      const headers = {};
+      const t = getToken(); if (t) headers['Authorization'] = 'Bearer ' + t;
+      const res = await fetch('/pipelines/'+id+'/upload', { method:'POST', headers, body: fd });
+      if (!res.ok) { const txt = await res.text(); throw new Error(txt || 'HTTP '+res.status); }
+      const r = await res.json();
+      toast('CSV 已上传并运行，run_id='+r.id, 'ok');
+      await loadAllRuns(); await loadStats();
+    } catch(e) { toast('上传失败: '+e.message, 'err'); }
+  };
+  inp.click();
+}
+async function syncToAsset(pid) {
+  try {
+    const runs = await api('/pipelines/'+pid+'/runs?limit=20');
+    const ok = runs.find(r => r.status === 'success');
+    if (!ok) { toast('该管道暂未成功运行，无法同步为资产', 'err'); return; }
+    location.href = '/static/assets.html?new=1&pipeline_id='+pid+'&run_id='+ok.id;
+  } catch(e) { toast('查询运行历史失败: '+e.message, 'err'); }
+}
+function toEmployee(pid) {
+  location.href = '/static/employees.html?pipeline_id='+pid+'&task_type=pipeline_run';
+}
+
+async function loadStats() {
+  try {
+    const sources = await api('/pipelines/sources?limit=500');
+    document.getElementById('statSources').textContent = sources.length;
+    const pipes = await api('/pipelines?limit=500');
+    document.getElementById('statPipelines').textContent = pipes.length;
+    let today = 0, succ = 0, total = 0;
+    const today0 = new Date(); today0.setHours(0,0,0,0);
+    for (const p of pipes) {
+      try {
+        const rs = await api('/pipelines/'+p.id+'/runs?limit=500');
+        for (const r of rs) {
+          total++;
+          if (r.status === 'success') succ++;
+          if (new Date(r.start_at) >= today0) today++;
+        }
+      } catch(e) {}
+    }
+    document.getElementById('statTodayRuns').textContent = today;
+    document.getElementById('statSuccess').textContent = succ + ' / ' + total;
+    document.getElementById('statSuccessPct').textContent = total ? '成功率 ' + Math.round(succ/total*100) + '%' : '';
+  } catch(e) { console.error(e); }
+}
+
+async function loadAllRuns() {
+  runsCache = [];
+  for (const p of pipelinesCache) {
+    try {
+      const rs = await api('/pipelines/'+p.id+'/runs?limit=50');
+      runsCache = runsCache.concat(rs);
+    } catch(e) {}
+  }
+  runsCache.sort((a,b) => new Date(b.start_at) - new Date(a.start_at));
+  runsCache = runsCache.slice(0, 30);
+  renderRuns();
+}
+function renderRuns() {
+  const tb = document.getElementById('runsTable');
+  if (runsCache.length === 0) { tb.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:20px;">暂无运行记录</td></tr>`; return; }
+  tb.innerHTML = runsCache.map((r,i) => `
+    <tr>
+      <td>${r.id}</td>
+      <td>#${r.pipeline_id}</td>
+      <td>${r.triggered_by}</td>
+      <td>${statusTag(r.status)}</td>
+      <td>${r.rows_count}</td>
+      <td>${fmtDate(r.start_at)}</td>
+      <td>${fmtDate(r.end_at)}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.error_msg||''}">${r.error_msg || '-'}</td>
+      <td>
+        ${ Array.isArray(r.data) && r.data.length ? `
+          <span class="expand-btn" onclick="toggleRunData(${i})">+ ${r.data.length} 条</span>
+          <div class="data-preview" id="runData_${i}" style="display:none;">${escapeHtml(JSON.stringify(r.data.slice(0,3), null, 2))}\n${r.data.length>3 ? '\n...(共 '+r.data.length+' 条，仅预览前 3 条)' : ''}</div>
+        ` : '<span class="tag tag-gray">无数据</span>' }
+      </td>
+    </tr>
+  `).join('');
+}
+function toggleRunData(i) {
+  const el = document.getElementById('runData_'+i);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+function scrollToRuns(pid) {
+  document.getElementById('runsCard').scrollIntoView({ behavior: 'smooth' });
+  if (pid) { toast('正在筛选 pipeline_id='+pid+' 的运行历史（当前展示合并视图）', ''); }
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+<div id="loginModal" class="modal-mask" onclick="if(event.target===this)hideLogin()">
+  <div class="modal">
+    <h3>🔐 用户登录 · 获取 JWT Token</h3>
+    <div class="mbody">
+      <div>
+        <label>用户名 / 邮箱</label>
+        <input id="loginUser" type="text" placeholder="例如 admin 或你的邮箱" autocomplete="username" />
+      </div>
+      <div>
+        <label>密码</label>
+        <input id="loginPass" type="password" placeholder="你的登录密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="tip">登录成功后将自动调用 POST /users/login，读取响应中的 access_token 并保存到全局 localStorage（7 页共享）。</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-cancel" onclick="hideLogin()">取消</button>
+      <button class="btn-ok" onclick="doLogin()">登录</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
